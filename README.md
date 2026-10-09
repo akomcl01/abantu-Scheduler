@@ -7,6 +7,10 @@ A simple, responsive scheduler for our FIFA group. We play **Wednesdays** (group
 - **Squad** – character names, teams, and the rotation order
 - **Settings** – rotation start date, share link, editing PIN
 
+## Player cards
+
+Each player gets an FC-style card. To use the real card from the game, save a screenshot/PNG as `public/cards/<name>.png` (lowercase, dashes for spaces, e.g. `big-mike.png`). Without a file the app draws a card from the position, overall and stats set in the Squad tab.
+
 ## Run
 
 ```bash

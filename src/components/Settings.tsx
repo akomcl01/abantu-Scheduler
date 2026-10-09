@@ -17,7 +17,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   return (
     <div className="space-y-8">
-      <h1 className="font-display text-5xl leading-none sm:text-6xl">Settings</h1>
+      <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl">Settings</h1>
       <Card className="divide-y divide-hair overflow-hidden">
         <Row title="Rotation starts" desc="The first Sunday in the loop. The first player in the squad goes first.">
           <input type="date" value={state.startDate} className="min-h-11 rounded-2xl border border-hair bg-paper px-4"

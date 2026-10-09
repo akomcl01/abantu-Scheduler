@@ -1,4 +1,5 @@
 import { matchesFrom, parseDate, todayStr, type Match, type ScheduleState } from '../lib/rotation'
+import PlayerCard from './PlayerCard'
 import { Avatar, Card, Icon, ICONS, Pill, SectionTitle, fmtDay, fmtLong, fmtMon, fmtWeekday } from './ui'
 
 const daysUntil = (d: string) => Math.round((parseDate(d).getTime() - parseDate(todayStr()).getTime()) / 86_400_000)
@@ -10,25 +11,35 @@ export default function Home({ state }: { state: ScheduleState }) {
   const list = upcoming.filter((m) => m !== hero && (m.kind === 'wednesday' || m.controller)).slice(0, 6)
   const active = state.members.filter((m) => m.active)
   const sundayLabel = hero ? when(hero.date) : ''
+  const following = upcoming.find((m) => m !== hero && m.kind === 'sunday' && m.controller)
+  const rotationIndex = Math.max(0, active.findIndex((m) => m.id === hero?.controller?.id))
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-sm text-mute">{fmtLong(todayStr())}</p>
-        <h1 className="font-display text-5xl leading-none sm:text-6xl">Who’s on the sticks?</h1>
-      </header>
-
       {!active.length && <Card className="p-6 text-mute">Add players in the Squad tab to start the rotation.</Card>}
 
       {hero?.controller && (
-        <section className="relative overflow-hidden rounded-[32px] bg-ink p-6 text-card sm:p-8">
-          <div className="absolute -right-10 -top-10 size-48 rounded-full opacity-90" style={{ background: hero.controller.color }} />
-          <div className="absolute -right-2 top-24 size-20 rounded-full bg-accent" />
-          <div className="relative">
-            <Pill tone="accent">{sundayLabel}</Pill>
-            <p className="mt-10 text-sm text-card/60">{fmtWeekday(hero.date)} · {fmtDay(hero.date)} {fmtMon(hero.date)}</p>
-            <h2 className="mt-1 break-words font-display text-6xl leading-[0.95] sm:text-7xl">{hero.controller.name}</h2>
-            <p className="mt-4 text-card/70">is controlling Abantu</p>
+        <section>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-mute">On the sticks</p>
+          <div className="grid grid-cols-[auto_1fr] items-start gap-5 sm:gap-10">
+            <PlayerCard m={hero.controller} className="w-36 sm:w-56" />
+            <div className="min-w-0">
+              <h1 className="break-words font-display text-5xl leading-[0.92] sm:text-7xl">{hero.controller.name}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Pill tone="gold">{sundayLabel}</Pill>
+                <span className="text-sm text-mute">{fmtWeekday(hero.date)} {fmtDay(hero.date)} {fmtMon(hero.date)}</span>
+              </div>
+              <p className="mt-4 hidden text-[15px] leading-relaxed text-mute sm:block">Controlling the whole Abantu team this Sunday. Everyone else is on the sofa with opinions.</p>
+
+              <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Turn</p>
+              <div className="flex items-center">
+                <span className="grid h-11 min-w-11 place-items-center rounded-lg bg-sand px-3 font-display text-xl">{rotationIndex + 1}</span>
+                <span className="h-0.5 w-5 bg-hair sm:w-10" />
+                <span className="flex h-11 items-center gap-2 rounded-lg border border-gold bg-gold/10 px-3 text-sm font-semibold text-gold">
+                  {following?.controller ? <><Avatar m={following.controller} size={22} />{following.controller.name}</> : 'Next up'}
+                </span>
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -36,16 +47,13 @@ export default function Home({ state }: { state: ScheduleState }) {
       {active.length > 0 && (
         <section>
           <SectionTitle>Rotation</SectionTitle>
-          <div className="-mx-4 flex gap-4 overflow-x-auto px-5 py-2 sm:mx-0 sm:flex-wrap sm:px-1">
-            {active.map((m, i) => {
+          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 pt-8 sm:mx-0 sm:flex-wrap sm:px-0">
+            {active.map((m) => {
               const now = m.id === hero?.controller?.id
               return (
-                <div key={m.id} className={`flex w-16 shrink-0 flex-col items-center gap-2 ${now ? '' : 'opacity-60'}`}>
-                  <div className="relative">
-                    <Avatar m={m} size={52} ring={now} />
-                    <span className="absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full bg-card text-[10px] font-bold ring-1 ring-hair">{i + 1}</span>
-                  </div>
-                  <span className={`max-w-full truncate text-xs ${now ? 'font-semibold' : ''}`}>{m.name}</span>
+                <div key={m.id} className="relative shrink-0">
+                  {now && <span className="absolute -top-6 left-1/2 size-0 -translate-x-1/2 border-x-[9px] border-t-[11px] border-x-transparent border-t-accent" />}
+                  <PlayerCard m={m} compact dim={!now} className={`w-24 transition ${now ? 'scale-105' : ''}`} />
                 </div>
               )
             })}
