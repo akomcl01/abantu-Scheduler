@@ -1,7 +1,7 @@
 /**
  * Words for the handover ceremony, written as templates.
  *
- * Each slot has several alternatives in the group's own "Communicado Official" voice. The app picks
+ * Each slot has several alternatives in the group's own "Communicado Oficial" voice. The app picks
  * one per slot, seeded by the handover, so every handover reads a little differently but the same
  * handover always reads the same (including on replay). To change the voice, edit or add strings
  * below. Placeholders: {out} outgoing coach, {inn} incoming coach, {club}, {games}, {w}.
@@ -104,7 +104,7 @@ export const farewell = (c: FarewellCtx) => {
   if (c.reason === 'benched') {
     return {
       kicker: `📣 Farewell · ${c.out}`,
-      headline: 'Communicado Official',
+      headline: 'Communicado Oficial',
       paragraphs: [FUNNY_OPEN, FUNNY_SALUTE, FUNNY_WELCOME, FUNNY_SIGNOFF].map((pool) => fill(pick(r, pool), v)),
       sign: CLUB,
     }
@@ -112,7 +112,7 @@ export const farewell = (c: FarewellCtx) => {
   const paragraphs = [fill(pick(r, FORMAL_OPEN), v), fill(pick(r, FORMAL_MIDDLE), v)]
   if (c.games > 0) paragraphs.push(fill(pick(r, FORMAL_STATS), v))
   paragraphs.push(fill(pick(r, FORMAL_CLOSE), v))
-  return { kicker: `📣 Thank you · ${c.out}`, headline: 'Communicado Official', paragraphs, sign: CLUB }
+  return { kicker: `📣 Thank you · ${c.out}`, headline: 'Communicado Oficial', paragraphs, sign: CLUB }
 }
 
 // --- welcome contract -------------------------------------------------------------------------
@@ -147,9 +147,9 @@ export const welcome = (c: WelcomeCtx) => {
   const v = { name: c.name, out: c.out, club: CLUB }
   const [fun1, fun2] = pickN(r, CLAUSE_FUN, 2)
   return {
-    kicker: 'Communicado Official',
+    kicker: 'Communicado Oficial',
     club: CLUB,
-    headline: 'Communicado Official', // the welcome is always titled this
+    headline: 'Communicado Oficial', // the welcome is always titled this
     welcomeKicker: `New coach · ${c.name}`,
     paragraphs: [fill(pick(r, WELCOME_INTRO), v), fill(pick(r, WELCOME_CLOSE), v)],
     sign: CLUB,
