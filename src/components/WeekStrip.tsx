@@ -30,7 +30,7 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
       <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">{thisWeek ? 'This week' : 'Week of'}</p>
-          <p className="font-display text-3xl leading-none">{fmtShort(days[0]).replace(/^\w+ /, '')} – {fmtShort(days[6]).replace(/^\w+ /, '')}</p>
+          <p className="font-display text-2xl leading-none">{fmtShort(days[0]).replace(/^\w+ /, '')} – {fmtShort(days[6]).replace(/^\w+ /, '')}</p>
         </div>
         <div className="flex items-center gap-2">
           {!thisWeek && <button onClick={() => { setStart(monday(today)); setSel(today) }} className="min-h-10 rounded-full bg-sand px-4 text-xs font-semibold">Today</button>}
@@ -48,9 +48,9 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
           const played = state.games.some((g) => g.date === d)
           return (
             <button key={d} onClick={() => setSel(d)} aria-pressed={on} aria-label={fmtLong(d)}
-              className={`relative flex min-h-[5.5rem] flex-col items-center justify-between rounded-2xl border px-1 pb-2 pt-2.5 transition ${on ? 'border-transparent bg-ink text-paper' : d === today ? 'border-accent/70 bg-card' : 'border-hair bg-card'} ${d < today && !on ? 'opacity-70' : ''}`}>
+              className={`relative flex min-h-[4.5rem] flex-col items-center justify-between rounded-2xl border px-1 pb-2 pt-2.5 transition ${on ? 'border-transparent bg-ink text-paper' : d === today ? 'border-accent/70 bg-card' : 'border-hair bg-card'} ${d < today && !on ? 'opacity-70' : ''}`}>
               <span className={`text-[10px] font-semibold uppercase tracking-wider ${on ? 'text-paper/70' : 'text-mute'}`}>{DAYS[i]}</span>
-              <span className="font-display text-2xl leading-none">{fmtDay(d)}</span>
+              <span className="font-display text-xl leading-none">{fmtDay(d)}</span>
               <span className="flex h-6 items-center justify-center">
                 {c ? <Avatar m={c} size={22} /> : ev ? <Icon d={ICONS.trophy} size={16} className={on ? 'text-paper' : 'text-gold'} /> : <span className={`size-1 rounded-full ${on ? 'bg-paper/40' : 'bg-hair'}`} />}
               </span>
