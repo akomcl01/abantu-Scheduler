@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { addDays, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
+import { addDays, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Icon, ICONS, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -115,8 +115,9 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
   const season = seasonOn(state, date)
   const played = date <= todayStr()
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
+  const [kind, setKind] = useState<Comp>('league')
   const dayGames = state.games.filter((g) => g.date === date).sort((a, b) => a.at.localeCompare(b.at))
-  const addGame = (result: Result) => onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: date === todayStr() ? nowStr() : `${date}T23:00:00`, date, result }] })
+  const addGame = (result: Result) => onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: date === todayStr() ? nowStr() : `${date}T23:00:00`, date, result, kind }] })
   const removeGame = (id: string) => onChange({ ...state, games: state.games.filter((g) => g.id !== id) })
 
   return (
@@ -138,10 +139,15 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Games {dayGames.length > 0 && <span className="normal-case tracking-normal">· tap one to remove it</span>}</p>
               {dayGames.length === 0 ? <p className="mb-4 text-sm text-mute">Nothing logged.</p> : (
                 <div className="mb-4 flex flex-wrap gap-1.5">
-                  {dayGames.map((g) => <button key={g.id} aria-label={`Remove ${g.result}`} onClick={guard(() => removeGame(g.id))}><ResultChip r={g.result} size={32} /></button>)}
+                  {dayGames.map((g) => <button key={g.id} aria-label={`Remove ${compOf(g)} ${g.result}`} onClick={guard(() => removeGame(g.id))} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={32} /></button>)}
                 </div>
               )}
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Add a game</p>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-mute">Add a game</p>
+                <div className="flex gap-1 rounded-full bg-sand p-1" role="group" aria-label="Competition">
+                  {(['league', 'playoff'] as const).map((c) => <button key={c} onClick={() => setKind(c)} aria-pressed={kind === c} className={`min-h-9 rounded-full px-4 text-xs font-semibold ${kind === c ? (c === 'playoff' ? 'bg-gold text-[#1b1405]' : 'bg-ink text-paper') : 'text-mute'}`}>{c === 'league' ? 'League' : 'Playoffs'}</button>)}
+                </div>
+              </div>
               <ResultButtons onPick={(r) => (canEdit ? addGame(r) : onNeedUnlock())} />
             </>
           ) : <p className="text-sm text-mute">You can log games once they’re played.</p>)}

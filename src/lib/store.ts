@@ -26,6 +26,7 @@ const seed = (): ScheduleState => ({
   benches: [],
   games: [],
   events: [],
+  recordPics: {},
 })
 
 /** Fill in fields that older saved data doesn't have. */
@@ -33,7 +34,7 @@ const normalize = (raw: (Partial<ScheduleState> & { results?: Record<string, 'W'
   const base = seed()
   const r = raw ?? {}
   const legacy = Object.entries(r.results ?? {}).map(([date, result]) => ({ id: crypto.randomUUID(), date, at: `${date}T12:00:00`, result }))
-  return { ...base, ...r, members: r.members ?? base.members, startDate: r.startDate ?? base.startDate, seasons: r.seasons ?? [], benches: r.benches ?? [], games: r.games ?? legacy, events: r.events ?? [] }
+  return { ...base, ...r, members: r.members ?? base.members, startDate: r.startDate ?? base.startDate, seasons: r.seasons ?? [], benches: r.benches ?? [], games: r.games ?? legacy, events: r.events ?? [], recordPics: r.recordPics ?? {} }
 }
 
 const readLocal = (): ScheduleState => {
@@ -70,7 +71,7 @@ export function useSchedule() {
 
   const save = useCallback(async (next: ScheduleState) => {
     setState(next)
-    if (!sb) { try { localStorage.setItem(LS, JSON.stringify(next)) } catch { /* ignore */ } return }
+    if (!sb) { try { localStorage.setItem(LS, JSON.stringify(next)); setError(null) } catch { setError('Could not save: this device is out of storage. Try a smaller screenshot.') } return }
     const { error } = await sb.rpc('save_state', { p_pin: pin, p_data: next })
     if (error) { setError(error.message); if (/pin/i.test(error.message)) unlock(null) }
     // eslint-disable-next-line react-hooks/exhaustive-deps

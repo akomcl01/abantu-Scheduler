@@ -18,12 +18,17 @@ export interface GameEvent {
 export type Result = 'W' | 'D' | 'L'
 
 /** One game, logged with a tap. `at` is local time (YYYY-MM-DDTHH:mm:ss) so order within a day is kept. */
+export type Comp = 'league' | 'playoff'
+
 export interface Game {
   id: string
   at: string
   date: string
   result: Result
+  kind?: Comp // missing on older data = league
 }
+
+export const compOf = (g: Game): Comp => g.kind ?? 'league'
 
 export interface Season {
   id: string
@@ -43,6 +48,7 @@ export interface ScheduleState {
   benches: string[] // when the current player was benched after 3 losses in a row (date or local timestamp)
   games: Game[] // every game logged, oldest first
   events?: GameEvent[] // playoffs and other one-off dates
+  recordPics?: Record<string, { league?: string; playoff?: string }> // screenshots of the in-game record, by season id (or 'all')
 }
 
 const DAY = 86_400_000
@@ -108,6 +114,12 @@ export function nextMember(state: ScheduleState, id: string): Member | null {
 }
 
 export const seasonOn = (state: ScheduleState, date: string) => state.seasons.find((x) => x.start <= date && date <= x.end) ?? null
+
+/** Games in a season (or all games when there is no season), split by competition. */
+export const recordFor = (games: Game[], season: { start: string; end: string } | null) => {
+  const inSeason = season ? games.filter((g) => g.date >= season.start && g.date <= season.end) : games
+  return { league: tally(inSeason.filter((g) => compOf(g) === 'league')), playoff: tally(inSeason.filter((g) => compOf(g) === 'playoff')) }
+}
 
 export const tally = (games: Game[]) => ({
   w: games.filter((g) => g.result === 'W').length,

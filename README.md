@@ -1,11 +1,15 @@
 # Abantu Scheduler
 
-A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sundays**. One person — the **Any** — controls the whole team for a **whole FC27 season**; the next player in the squad order takes over at the next season, or early if the current player loses **3 in a row**.
+A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sundays**. One person — the **Coach** — controls the whole team for a **whole FC27 season**; the next player in the squad order takes over at the next season, or early if the current player loses **3 in a row**.
 
 - **Next up** – who's on the sticks, their losses in a row (3 triggers a handover), and recent results
 - **Calendar** – who has each game, logged results, seasons and playoffs
 - **Squad** – character names, teams, and the rotation order
 - **Settings** – first player's start date, seasons, look (FC / Classic), share link, editing PIN
+
+## Records
+
+Results are split into **League** and **Playoffs** (toggle above the Win / Draw / Loss buttons). Each record card also takes an optional screenshot of the in-game record, so it works even if you don't log every game.
 
 ## Player cards
 

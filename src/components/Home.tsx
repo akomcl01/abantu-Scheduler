@@ -1,5 +1,7 @@
-import { controllerFor, lossStreak, matchesFrom, nextMember, nowStr, parseDate, seasonOn, todayStr, type Match, type Result, type ScheduleState } from '../lib/rotation'
+import { compOf, controllerFor, lossStreak, matchesFrom, nextMember, nowStr, parseDate, seasonOn, todayStr, type Comp, type Match, type Result, type ScheduleState } from '../lib/rotation'
+import { useState } from 'react'
 import PlayerCard from './PlayerCard'
+import Records from './Records'
 import { Avatar, Btn, Card, Icon, ICONS, Pill, ResultChip, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -9,14 +11,16 @@ const when = (d: string) => { const n = daysUntil(d); return n === 0 ? 'Today' :
 
 export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const today = todayStr()
+  const [comp, setCompState] = useState<Comp>(() => { try { return localStorage.getItem('abantu-comp') === 'playoff' ? 'playoff' : 'league' } catch { return 'league' } })
+  const setComp = (c: Comp) => { setCompState(c); try { localStorage.setItem('abantu-comp', c) } catch { /* ignore */ } }
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   const active = state.members.filter((m) => m.active)
   const cur = controllerFor(state, today) ?? active[0] ?? null
   const next = cur ? nextMember(state, cur.id) : null
-  const { streak, recent, today: day, season: tot } = lossStreak(state, today)
+  const { streak, recent, today: day } = lossStreak(state, today)
   const log = (result: Result) => {
     navigator.vibrate?.(12)
-    onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: nowStr(), date: today, result }] })
+    onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: nowStr(), date: today, result, kind: comp }] })
   }
   const undo = () => onChange({ ...state, games: state.games.filter((g) => g.id !== state.games[state.games.length - 1]?.id) })
   const season = seasonOn(state, today)
@@ -38,7 +42,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
 
       {cur && (
         <section>
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-mute">The Any</p>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Coach</p>
           <div className="grid grid-cols-[auto_1fr] items-start gap-5 sm:gap-10">
             <PlayerCard m={cur} className="w-36 sm:w-56" />
             <div className="min-w-0">
@@ -55,16 +59,22 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
               </div>
 
               {recent.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Recent games">{recent.map((g) => <ResultChip key={g.id} r={g.result} size={28} />)}</div>
+                <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Recent games">{recent.map((g) => <span key={g.id} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={28} /></span>)}</div>
               )}
               <p className="mt-3 text-sm text-mute">
                 Today <b className="text-ink">{day.w}W {day.d}D {day.l}L</b>
-                <span className="mx-2">·</span>Season <b className="text-ink">{tot.w}W {tot.d}D {tot.l}L</b>
               </p>
             </div>
           </div>
           <div className="mt-6">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Log a game</p>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Log a game</p>
+              <div className="flex gap-1 rounded-full bg-sand p-1" role="group" aria-label="Competition">
+                {(['league', 'playoff'] as const).map((c) => (
+                  <button key={c} onClick={() => setComp(c)} aria-pressed={comp === c} className={`min-h-9 rounded-full px-4 text-xs font-semibold ${comp === c ? (c === 'playoff' ? 'bg-gold text-[#1b1405]' : 'bg-ink text-paper') : 'text-mute'}`}>{c === 'league' ? 'League' : 'Playoffs'}</button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-2">
               <button onClick={guard(() => log('W'))} className="min-h-16 rounded-xl bg-win/15 font-display text-2xl text-win active:scale-95">Win</button>
               <button onClick={guard(() => log('D'))} className="min-h-16 rounded-xl bg-sand font-display text-2xl text-mute active:scale-95">Draw</button>
@@ -75,8 +85,8 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
           {benched && (
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
               <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
-              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as the Any.</p>
-              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Appoint {next.name} as the Any</Btn>
+              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as Coach.</p>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Appoint {next.name} as Coach</Btn>
             </div>
           )}
           {next && (
@@ -87,6 +97,8 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
           )}
         </section>
       )}
+
+      <Records state={state} canEdit={canEdit} onChange={onChange} onNeedUnlock={onNeedUnlock} />
 
       {!state.seasons.length && cur && (
         <Card className="p-4 text-sm text-mute">Add the season dates in Settings so the app knows when {next?.name ?? 'the next player'} takes over.</Card>

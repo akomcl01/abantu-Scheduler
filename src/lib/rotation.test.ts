@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildStints, controllerFor, lossStreak, matchesFrom, nextMember, seasonOn, type ScheduleState } from './rotation'
+import { recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, seasonOn, type ScheduleState } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -79,5 +79,20 @@ describe('match days', () => {
     const m = matchesFrom(base, '2026-10-04', 8)
     expect(m.map((x) => x.kind)).toEqual(['sunday', 'wednesday', 'sunday'])
     expect(m.every((x) => x.controller?.id === 'a')).toBe(true)
+  })
+})
+
+describe('league vs playoff record', () => {
+  it('splits a season record by competition and treats old games as league', () => {
+    const games = [
+      { ...g('2026-10-04', 'W') },
+      { ...g('2026-10-07', 'L'), kind: 'playoff' as const },
+      { ...g('2026-10-11', 'W'), kind: 'playoff' as const },
+      { ...g('2026-11-01', 'L') }, // other season
+    ]
+    const r = recordFor(games, base.seasons[0])
+    expect(r.league).toEqual({ w: 1, d: 0, l: 0 })
+    expect(r.playoff).toEqual({ w: 1, d: 0, l: 1 })
+    expect(recordFor(games, null).league.l).toBe(1)
   })
 })
