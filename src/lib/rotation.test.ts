@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { controllerFor, matchesFrom, nextOnOrAfter, type ScheduleState } from './rotation'
 
-const mk = (id: string, active = true) => ({ id, name: id, team: 'T', color: '#fff', active })
+const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
   members: [mk('a'), mk('b'), mk('c')],
   startDate: '2026-10-04', // a Sunday

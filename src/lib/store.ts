@@ -10,22 +10,21 @@ export const isShared = !!sb
 const LS = 'abantu-scheduler-v1'
 const PIN_KEY = 'abantu-pin'
 
-const COLORS = ['#c6f24e', '#5eead4', '#f9a8d4', '#fcd34d', '#93c5fd', '#fdba74', '#c4b5fd', '#fca5a5']
+export const COLORS = ['#E9B44C', '#D98A6C', '#9DB58A', '#8FB0C9', '#B79BC4', '#E7A5B0', '#7FB7A8', '#C9B38C']
 
-export const newMember = (i: number, name = '', team = '') => ({
+export const newMember = (i: number, name = '') => ({
   id: crypto.randomUUID(),
   name,
-  team,
   color: COLORS[i % COLORS.length],
   active: true,
 })
 
 const seed = (): ScheduleState => ({
   members: [
-    newMember(0, 'Player 1', 'Arsenal'),
-    newMember(1, 'Player 2', 'Real Madrid'),
-    newMember(2, 'Player 3', 'Man City'),
-    newMember(3, 'Player 4', 'Barcelona'),
+    newMember(0, 'Player 1'),
+    newMember(1, 'Player 2'),
+    newMember(2, 'Player 3'),
+    newMember(3, 'Player 4'),
   ],
   startDate: nextOnOrAfter(todayStr(), 0),
   skipped: [],
