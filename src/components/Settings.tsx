@@ -3,7 +3,7 @@ import { isShared } from '../lib/store'
 import { controllerFor, todayStr, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
-interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void }
+interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void; onReplay?: () => void }
 
 const Row = ({ title, desc, children }: { title: string; desc: string; children?: ReactNode }) => (
   <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -12,7 +12,7 @@ const Row = ({ title, desc, children }: { title: string; desc: string; children?
   </div>
 )
 
-export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLock, theme, onTheme }: Props) {
+export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLock, theme, onTheme, onReplay }: Props) {
   const [copied, setCopied] = useState(false)
   const [addingSeason, setAddingSeason] = useState(false)
   const seasons = [...state.seasons].sort((a, b) => a.start.localeCompare(b.start))
@@ -33,6 +33,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
             ))}
           </div>
         </Row>
+        {onReplay && <Row title="Handover ceremony" desc="Watch the latest coach change again: the thank-you and the contract."><Btn onClick={onReplay}>Replay</Btn></Row>}
         <Row title="How it works" desc="One player has the team for a whole season, on Wednesdays and Sundays. If they lose 3 in a row, the next player takes over early." />
         <Row title="Share" desc={isShared ? 'Anyone with this link sees the live schedule.' : 'Saved on this device only for now. Publish the site to share it with the group.'}>
           <Btn onClick={() => { navigator.clipboard?.writeText(location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>{copied ? 'Copied' : 'Copy link'}</Btn>

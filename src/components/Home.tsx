@@ -75,8 +75,8 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
           {benched && (
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
               <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
-              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes the team now.</p>
-              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Hand over to {next.name}</Btn>
+              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as coach.</p>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Appoint {next.name} as coach</Btn>
             </div>
           )}
           {next && (

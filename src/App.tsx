@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import CalendarView from './components/CalendarView'
 import Home from './components/Home'
 import Settings from './components/Settings'
+import Ceremony, { latestHandover } from './components/Ceremony'
 import Squad from './components/Squad'
 import { Btn, Icon, ICONS, Sheet } from './components/ui'
 import { isShared, useSchedule } from './lib/store'
@@ -24,6 +25,7 @@ export default function App() {
   const { state, save, canEdit, unlock, error } = useSchedule()
   const [tab, setTab] = useState<Tab>('home')
   const [askPin, setAskPin] = useState(false)
+  const [replay, setReplay] = useState(false)
   const [pin, setPin] = useState('')
   const [bad, setBad] = useState(false)
 
@@ -42,12 +44,14 @@ export default function App() {
         {tab === 'home' && <Home state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'squad' && <Squad state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
-        {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} />}
+        {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} onReplay={latestHandover(state) ? () => setReplay(true) : undefined} />}
       </main>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Nav tab={tab} setTab={setTab} mobile />
       </div>
+
+      <Ceremony state={state} replay={replay} onReplayDone={() => setReplay(false)} />
 
       {askPin && (
         <Sheet title="Group PIN" onClose={() => setAskPin(false)}>
