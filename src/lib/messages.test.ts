@@ -22,7 +22,7 @@ describe('handover messages', () => {
       expect(`${w.intro}${w.clauses.join('')}`).not.toMatch(/\{\w+\}/)
       expect(w.intro).toContain('Olamide')
       expect(w.headline).toBe('Welcome, Olamide')
-      expect(w.kicker).toBe('Communicado Official')
+      expect(w.kicker).toBe('Comunicado Oficial')
       expect(w.paragraphs[0]).toMatch(/coach/i) // welcomed as a coach
       expect(w.paragraphs.join(' ')).not.toMatch(/\bplayer\b|signing|skill/i)
       expect(w.paragraphs.join(' ')).not.toMatch(/\{\w+\}/)
@@ -30,10 +30,10 @@ describe('handover messages', () => {
       expect(w.clauses.some((c) => /Three \(3\)/.test(c))).toBe(true)
     }
   })
-  it('both farewells carry the Communicado Official label and name the outgoing coach in the title', () => {
+  it('both farewells carry the Comunicado Oficial label and name the outgoing coach in the title', () => {
     for (const reason of ['season', 'benched'] as const) {
       const m = f('x', reason)
-      expect(m.kicker).toBe('📣 Communicado Official')
+      expect(m.kicker).toBe('📣 Comunicado Oficial')
       expect(m.headline).toContain('Theo')
     }
   })
