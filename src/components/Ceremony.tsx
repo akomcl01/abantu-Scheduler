@@ -86,7 +86,7 @@ function Welcome({ w, inn, season, from, end, onNext }: { w: ReturnType<typeof w
   const tiles = [['Season', season ?? 'Open'], ['Starts', fmtShort(from)], ['Ends', end ? fmtShort(end) : '–']] as const
   return (
     <>
-      <p className="rise-in text-center text-xs font-semibold uppercase tracking-[0.22em] text-gold">📣 {w.welcomeKicker}</p>
+      <p className="rise-in text-center text-xs font-semibold uppercase tracking-[0.22em] text-gold">📣 {w.kicker}</p>
       <h1 className="rise-in mt-3 break-words text-center font-display text-5xl leading-[0.95]" style={{ animationDelay: '80ms' }}>{w.headline}</h1>
       <PlayerCard m={inn} className="rise-in mx-auto mt-7 w-40" />
       <div className="mt-8 space-y-4 text-[15px] leading-relaxed">

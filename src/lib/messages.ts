@@ -103,8 +103,8 @@ export const farewell = (c: FarewellCtx) => {
   const v = { out: c.out, inn: c.inn, club: CLUB, games: c.games, w: c.w }
   if (c.reason === 'benched') {
     return {
-      kicker: `📣 Farewell · ${c.out}`,
-      headline: 'Communicado Official',
+      kicker: '📣 Communicado Official',
+      headline: `Farewell, ${c.out}`,
       paragraphs: [FUNNY_OPEN, FUNNY_SALUTE, FUNNY_WELCOME, FUNNY_SIGNOFF].map((pool) => fill(pick(r, pool), v)),
       sign: CLUB,
     }
@@ -112,7 +112,7 @@ export const farewell = (c: FarewellCtx) => {
   const paragraphs = [fill(pick(r, FORMAL_OPEN), v), fill(pick(r, FORMAL_MIDDLE), v)]
   if (c.games > 0) paragraphs.push(fill(pick(r, FORMAL_STATS), v))
   paragraphs.push(fill(pick(r, FORMAL_CLOSE), v))
-  return { kicker: `📣 Thank you · ${c.out}`, headline: 'Communicado Official', paragraphs, sign: CLUB }
+  return { kicker: '📣 Communicado Official', headline: `Thank you, Coach ${c.out}`, paragraphs, sign: CLUB }
 }
 
 // --- welcome contract -------------------------------------------------------------------------
@@ -149,8 +149,7 @@ export const welcome = (c: WelcomeCtx) => {
   return {
     kicker: 'Communicado Official',
     club: CLUB,
-    headline: 'Communicado Official', // the welcome is always titled this
-    welcomeKicker: `New coach · ${c.name}`,
+    headline: `Welcome, ${c.name}`,
     paragraphs: [fill(pick(r, WELCOME_INTRO), v), fill(pick(r, WELCOME_CLOSE), v)],
     sign: CLUB,
     nextCta: 'Sign your contract',
