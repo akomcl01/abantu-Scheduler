@@ -21,7 +21,9 @@ describe('handover messages', () => {
       const w = welcome({ seed: `s${i}`, name: 'Olamide', out: 'Theo', season: 'Season 2', term: 'x', contractNo: 3 })
       expect(`${w.intro}${w.clauses.join('')}`).not.toMatch(/\{\w+\}/)
       expect(w.intro).toContain('Olamide')
-      expect(w.headline).toBe('Welcome, Olamide')
+      expect(w.headline).toBe('Communicado Official')
+      expect(w.paragraphs[0]).toMatch(/coach/i) // welcomed as a coach
+      expect(w.paragraphs.join(' ')).not.toMatch(/\bplayer\b|signing|skill/i)
       expect(w.paragraphs.join(' ')).not.toMatch(/\{\w+\}/)
       expect(w.clauses).toHaveLength(4)
       expect(w.clauses.some((c) => /Three \(3\)/.test(c))).toBe(true)

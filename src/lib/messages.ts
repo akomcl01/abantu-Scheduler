@@ -117,9 +117,9 @@ export const farewell = (c: FarewellCtx) => {
 
 // --- welcome contract -------------------------------------------------------------------------
 const WELCOME_INTRO = [
-  `We are delighted to welcome {name} to {club}. Their arrival marks an exciting new chapter for our team as we continue to strengthen our squad and uphold our commitment to excellence both on and off the field. We look forward to the skill, energy, and passion {name} will bring to the club and wish them great success in the seasons ahead.`,
-  `A warm welcome to {name}, our new Coach at {club}. Their arrival opens an exciting new chapter as we keep building the squad and holding ourselves to a high standard on and off the pitch. We look forward to the skill, energy, and passion {name} brings, and wish them great success ahead.`,
-  `{club} is proud to announce {name} as our new head coach, in full control of the whole team. We expect big things: skill, energy, and plenty of passion. Welcome aboard, and may the seasons ahead be kind.`,
+  `We are delighted to welcome {name} to {club} as our new Coach. Their appointment marks an exciting new chapter for our team as we continue to build and uphold our commitment to excellence both on and off the field. We look forward to the tactics, leadership, and passion {name} will bring to the dugout and wish them great success in the seasons ahead.`,
+  `A warm welcome to {name}, who takes charge at {club} as our new Coach. Their appointment opens an exciting new chapter as we keep building and holding ourselves to a high standard on and off the pitch. We look forward to the leadership, the big decisions, and the passion {name} brings to the dugout, and wish them great success ahead.`,
+  `{club} is proud to announce {name} as our new head coach. We expect big things: smart tactics, steady leadership, and plenty of passion. Welcome aboard, and may the seasons ahead be kind.`,
 ]
 const WELCOME_CLOSE = [
   `The dugout is yours, {name}. Please keep the complaints to a minimum.`,
@@ -149,7 +149,8 @@ export const welcome = (c: WelcomeCtx) => {
   return {
     kicker: 'Communicado Official',
     club: CLUB,
-    headline: `Welcome, ${c.name}`,
+    headline: 'Communicado Official', // the welcome is always titled this
+    welcomeKicker: `New coach · ${c.name}`,
     paragraphs: [fill(pick(r, WELCOME_INTRO), v), fill(pick(r, WELCOME_CLOSE), v)],
     sign: CLUB,
     nextCta: 'Sign your contract',
