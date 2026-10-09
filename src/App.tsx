@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CalendarView from './components/CalendarView'
 import Home from './components/Home'
 import Settings from './components/Settings'
@@ -14,7 +14,13 @@ const tabs = [
 ] as const
 type Tab = (typeof tabs)[number]['id']
 
+type Theme = 'fc' | 'classic'
+const readTheme = (): Theme => { try { return localStorage.getItem('abantu-theme') === 'classic' ? 'classic' : 'fc' } catch { return 'fc' } }
+
 export default function App() {
+  const [theme, setThemeState] = useState<Theme>(readTheme)
+  useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
+  const setTheme = (t: Theme) => { setThemeState(t); try { localStorage.setItem('abantu-theme', t) } catch { /* ignore */ } }
   const { state, save, canEdit, unlock, error } = useSchedule()
   const [tab, setTab] = useState<Tab>('home')
   const [askPin, setAskPin] = useState(false)
@@ -37,7 +43,7 @@ export default function App() {
         {tab === 'home' && <Home state={state} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'squad' && <Squad state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
-        {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} />}
+        {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} />}
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hair bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
@@ -65,11 +71,11 @@ function Nav({ tab, setTab, mobile = false }: { tab: Tab; setTab: (t: Tab) => vo
         return (
           <button key={t.id} onClick={() => setTab(t.id)} aria-current={on ? 'page' : undefined}
             className={mobile
-              ? `flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${on ? 'text-white' : 'text-mute'}`
-              : `relative min-h-11 text-[15px] font-semibold transition ${on ? 'text-white' : 'text-mute hover:text-white'}`}>
+              ? `flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${on ? 'text-ink' : 'text-mute'}`
+              : `relative min-h-11 text-[15px] font-semibold transition ${on ? 'text-ink' : 'text-mute hover:text-ink'}`}>
             {mobile && <Icon d={t.icon} size={22} className={on ? 'text-accent' : ''} />}
             {t.label}
-            {on && !mobile && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-white" />}
+            {on && !mobile && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-ink" />}
             {on && mobile && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-accent" />}
           </button>
         )

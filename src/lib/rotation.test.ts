@@ -29,7 +29,13 @@ describe('rotation', () => {
   it('ignores inactive members and non-Sundays', () => {
     const s = { ...base, members: [mk('a'), mk('b', false), mk('c')] }
     expect(controllerFor(s, '2026-10-11')?.id).toBe('c')
-    expect(controllerFor(base, '2026-10-07')).toBeNull()
+    expect(controllerFor(base, '2026-10-08')).toBeNull()
+  })
+  it('gives Wednesday to the same player as the Sunday after it', () => {
+    expect(controllerFor(base, '2026-10-07')?.id).toBe('b')
+    const s = { ...base, overrides: { '2026-10-11': 'c' }, skipped: ['2026-10-18'] }
+    expect(controllerFor(s, '2026-10-07')?.id).toBe('c')
+    expect(controllerFor(s, '2026-10-14')).toBeNull()
   })
   it('lists Wednesdays and Sundays', () => {
     const m = matchesFrom(base, '2026-10-04', 8)

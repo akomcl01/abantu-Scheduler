@@ -12,8 +12,8 @@ export interface Member {
 export interface ScheduleState {
   members: Member[] // order = rotation order
   startDate: string // first Sunday of the rotation, YYYY-MM-DD
-  skipped: string[] // Sundays with no turn (doesn't consume a turn)
-  overrides: Record<string, string> // date -> member id (swap, doesn't shift rotation)
+  skipped: string[] // Sundays with no turn (also cancels the Wednesday before it; doesn't consume a turn)
+  overrides: Record<string, string> // Sunday date -> member id (swap, covers that week's Wed + Sun, doesn't shift rotation)
 }
 
 const DAY = 86_400_000
@@ -34,8 +34,9 @@ export function nextOnOrAfter(s: string, weekday: number) {
   return addDays(s, (weekday - dow(s) + 7) % 7)
 }
 
-/** Who controls the team on a given Sunday (null if skipped / before start / nobody active). */
+/** Who controls the team on a given match day. A Wednesday belongs to the Sunday that follows it, so one person plays both nights. */
 export function controllerFor(state: ScheduleState, date: string): Member | null {
+  if (dow(date) === 3) return controllerFor(state, addDays(date, 4))
   if (dow(date) !== 0 || state.skipped.includes(date)) return null
   const active = state.members.filter((m) => m.active)
   if (!active.length) return null
@@ -61,7 +62,7 @@ export function matchesFrom(state: ScheduleState, from: string, days: number): M
     const date = addDays(from, i)
     const w = dow(date)
     if (w === 0) out.push({ date, kind: 'sunday', controller: controllerFor(state, date), skipped: state.skipped.includes(date) })
-    else if (w === 3) out.push({ date, kind: 'wednesday', controller: null, skipped: false })
+    else if (w === 3) out.push({ date, kind: 'wednesday', controller: controllerFor(state, date), skipped: state.skipped.includes(addDays(date, 4)) })
   }
   return out
 }

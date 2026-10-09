@@ -21,7 +21,7 @@ export const Card = ({ children, className = '' }: { children: ReactNode; classN
 )
 
 export const Pill = ({ children, tone = 'mute' }: { children: ReactNode; tone?: 'mute' | 'accent' | 'dark' | 'gold' }) => (
-  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${tone === 'accent' ? 'bg-accent text-[#04150e]' : tone === 'dark' ? 'bg-ink text-paper' : tone === 'gold' ? 'border border-gold text-gold bg-gold/10' : 'bg-sand text-mute'}`}>
+  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${tone === 'accent' ? 'bg-accent text-on-accent' : tone === 'dark' ? 'bg-ink text-paper' : tone === 'gold' ? 'border border-gold text-gold bg-gold/10' : 'bg-sand text-mute'}`}>
     {children}
   </span>
 )
@@ -30,7 +30,7 @@ export const Btn = ({ variant = 'ghost', className = '', ...p }: React.ButtonHTM
   <button
     {...p}
     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition disabled:opacity-40 ${
-      variant === 'primary' ? 'bg-gradient-to-r from-[#3B6BFF] to-[#7C4DFF] text-white hover:brightness-110' : variant === 'danger' ? 'bg-sand text-[#ff7a7a] hover:bg-hair' : 'border border-hair bg-sand text-ink hover:bg-hair'
+      variant === 'primary' ? 'bg-gradient-to-r from-primary-from to-primary-to text-on-primary hover:brightness-110' : variant === 'danger' ? 'bg-sand text-accent hover:bg-hair' : 'border border-hair bg-sand text-ink hover:bg-hair'
     } ${className}`}
   />
 )
