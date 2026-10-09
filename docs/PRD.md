@@ -38,7 +38,7 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 
 ## Shared data (this branch: `firebase`)
 - Everyone reads the same live data; editing needs the group PIN.
-- **Firestore** collections: `club/state` (members, start date, seasons, benches, events), `games/{id}` (one doc per game, so two people logging at once never overwrite each other), `pics/{id}` (record screenshots, one doc each).
+- **Firestore** collections: `club/state` (members, start date, seasons, benches, events), `games/{id}` (one doc per game, so two people logging at once never overwrite each other), `pics/{id}` (record screenshots and uploaded player pictures, one doc each).
 - **Rules**: public read. Write only for the shared editor account.
 - **PIN = the editor account's password** (Firebase Auth email/password). Unlock signs in with it; a wrong PIN fails to sign in.
 - **No Cloud Storage** (needs the paid plan). Screenshots are compressed to under 450 KB and kept in Firestore.

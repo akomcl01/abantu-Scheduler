@@ -12,7 +12,7 @@ export type Config = Pick<ScheduleState, 'members' | 'startDate' | 'seasons' | '
 export interface Pic {
   id: string
   key: string // season id or 'all'
-  kind: 'league' | 'playoff'
+  kind: 'league' | 'playoff' | 'player' // player = a member's uploaded picture (key = member id)
   dataUrl: string
 }
 
@@ -21,21 +21,32 @@ export const picId = (key: string, kind: Pic['kind']) => `${key}__${kind}`
 /** Firestore rejects `undefined`, so round-trip through JSON. */
 const clean = <T>(x: T): T => JSON.parse(JSON.stringify(x))
 
-export const configOf = (s: ScheduleState): Config =>
-  clean({ members: s.members, startDate: s.startDate, seasons: s.seasons, benches: s.benches, events: s.events ?? [] })
+const isData = (u?: string) => !!u && u.startsWith('data:')
+/** Uploaded pictures live in their own docs, so the config stays tiny. File paths like /cards/x.png stay inline. */
+const slimMember = (m: ScheduleState['members'][number]) => (isData(m.cardImage) ? { ...m, cardImage: undefined } : m)
 
-export const picsOf = (s: ScheduleState): Pic[] =>
-  Object.entries(s.recordPics ?? {}).flatMap(([key, v]) =>
+export const configOf = (s: ScheduleState): Config =>
+  clean({ members: s.members.map(slimMember), startDate: s.startDate, seasons: s.seasons, benches: s.benches, events: s.events ?? [] })
+
+export const picsOf = (s: ScheduleState): Pic[] => [
+  ...Object.entries(s.recordPics ?? {}).flatMap(([key, v]) =>
     (['league', 'playoff'] as const).filter((k) => v[k]).map((kind) => ({ id: picId(key, kind), key, kind, dataUrl: v[kind]! })),
-  )
+  ),
+  ...s.members.filter((m) => isData(m.cardImage)).map((m) => ({ id: picId(m.id, 'player'), key: m.id, kind: 'player' as const, dataUrl: m.cardImage! })),
+]
 
 export function joinState(config: Partial<Config> | null, games: Game[], pics: Pic[], fallback: ScheduleState): ScheduleState {
   const recordPics: NonNullable<ScheduleState['recordPics']> = {}
-  for (const p of pics) recordPics[p.key] = { ...recordPics[p.key], [p.kind]: p.dataUrl }
+  const faces = new Map<string, string>()
+  for (const p of pics) {
+    if (p.kind === 'player') faces.set(p.key, p.dataUrl)
+    else recordPics[p.key] = { ...recordPics[p.key], [p.kind]: p.dataUrl }
+  }
+  const members = (config?.members ?? fallback.members).map((m) => (faces.has(m.id) ? { ...m, cardImage: faces.get(m.id) } : m))
   return {
     ...fallback,
     ...(config ?? {}),
-    members: config?.members ?? fallback.members,
+    members,
     seasons: config?.seasons ?? [],
     benches: config?.benches ?? [],
     events: config?.events ?? [],

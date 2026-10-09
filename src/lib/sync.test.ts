@@ -43,6 +43,20 @@ describe('shared data layout', () => {
     const removed = diffState(next, { ...next, recordPics: { s1: { league: 'data:a' } } })
     expect(removed.picsDel).toEqual(['s1__playoff'])
   })
+  it('keeps uploaded player pictures out of the config doc and puts them back on read', () => {
+    const withPic = { ...base, members: [{ ...base.members[0], cardImage: 'data:image/webp;base64,AAAA' }, { id: 'b', name: 'B', color: '#000', active: true, cardImage: '/cards/b.png' }] }
+    const d = diffState(base, withPic)
+    expect(JSON.stringify(d.config)).not.toContain('data:image')
+    expect(d.config?.members[1].cardImage).toBe('/cards/b.png') // file paths stay inline
+    expect(d.picsSet.map((p) => p.id)).toEqual(['a__player'])
+    expect(joinState(d.config, [], d.picsSet, base).members[0].cardImage).toBe('data:image/webp;base64,AAAA')
+    // changing only the picture does not rewrite the config
+    const changed = diffState(withPic, { ...withPic, members: [{ ...withPic.members[0], cardImage: 'data:image/webp;base64,BBBB' }, withPic.members[1]] })
+    expect(changed.config).toBeNull()
+    expect(changed.picsSet).toHaveLength(1)
+    // removing it deletes the pic doc
+    expect(diffState(withPic, { ...withPic, members: [{ ...withPic.members[0], cardImage: undefined }, withPic.members[1]] }).picsDel).toEqual(['a__player'])
+  })
   it('joins config, games and pics into one state with games in time order', () => {
     const s = joinState({ startDate: '2026-10-01' }, [game('b', '2026-10-07T12:00:00'), game('a', '2026-10-07T10:00:00')], [], base)
     expect(s.startDate).toBe('2026-10-01')
