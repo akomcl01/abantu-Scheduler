@@ -12,9 +12,9 @@
   --color-win: #34E0A1;
   --color-loss: #FF6B6B;
   --color-on-accent: #04150E;
-  --color-primary-from: #3B6BFF;
-  --color-primary-to: #7C4DFF;
-  --color-on-primary: #FFFFFF;
+  --color-primary-from: #34E0A1;
+  --color-primary-to: #34E0A1;
+  --color-on-primary: #04150E;
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Barlow Condensed", "Arial Narrow", ui-sans-serif, sans-serif;
   --font-card: "Barlow Condensed", "Arial Narrow", sans-serif;
