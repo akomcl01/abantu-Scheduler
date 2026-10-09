@@ -121,6 +121,11 @@ const WELCOME_INTRO = [
   `A warm welcome to {name}, our new Coach at {club}. Their arrival opens an exciting new chapter as we keep building the squad and holding ourselves to a high standard on and off the pitch. We look forward to the skill, energy, and passion {name} brings, and wish them great success ahead.`,
   `{club} is proud to announce {name} as our new head coach, in full control of the whole team. We expect big things: skill, energy, and plenty of passion. Welcome aboard, and may the seasons ahead be kind.`,
 ]
+const WELCOME_CLOSE = [
+  `The dugout is yours, {name}. Please keep the complaints to a minimum.`,
+  `Training starts now, {name}. The headset is yours, and so is the blame.`,
+  `The squad is behind you, {name}, and, more importantly, watching.`,
+]
 const CLAUSE_CONTROL = [`The Coach shall have full control of the whole Abantu team{season}, on Wednesdays and Sundays alike.`]
 const CLAUSE_DISMISSAL = [
   `Three (3) consecutive defeats shall result in immediate dismissal. The board is not sentimental.`,
@@ -144,6 +149,10 @@ export const welcome = (c: WelcomeCtx) => {
   return {
     kicker: 'Communicado Official',
     club: CLUB,
+    headline: `Welcome, ${c.name}`,
+    paragraphs: [fill(pick(r, WELCOME_INTRO), v), fill(pick(r, WELCOME_CLOSE), v)],
+    sign: CLUB,
+    nextCta: 'Sign your contract',
     title: 'Coaching contract',
     intro: fill(pick(r, WELCOME_INTRO), v),
     clauses: [

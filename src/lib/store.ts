@@ -1,14 +1,13 @@
-import { createClient } from '@supabase/supabase-js'
-import { useCallback, useEffect, useState } from 'react'
-import { todayStr, type ScheduleState } from './rotation'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { collection, doc, onSnapshot, writeBatch } from 'firebase/firestore'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { fb, editorEmail } from './firebase'
+import { todayStr, type Game, type ScheduleState } from './rotation'
+import { diffState, joinState, type Config, type Pic } from './sync'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-const sb = url && key ? createClient(url, key) : null
-export const isShared = !!sb
+export const isShared = !!fb
 
 const LS = 'abantu-scheduler-v1'
-const PIN_KEY = 'abantu-pin'
 
 export const COLORS = ['#E9B44C', '#D98A6C', '#9DB58A', '#8FB0C9', '#B79BC4', '#E7A5B0', '#7FB7A8', '#C9B38C']
 
@@ -45,45 +44,69 @@ const readLocal = (): ScheduleState => {
   return seed()
 }
 
-export function useSchedule() {
-  const [state, setState] = useState<ScheduleState | null>(isShared ? null : readLocal())
-  const [pin, setPin] = useState<string | null>(() => {
-    try { return sessionStorage.getItem(PIN_KEY) } catch { return null }
-  })
+/** Local mode: everything lives on this device. */
+function useLocalSchedule() {
+  const [state, setState] = useState<ScheduleState | null>(readLocal)
+  const [error, setError] = useState<string | null>(null)
+  const save = useCallback(async (next: ScheduleState) => {
+    setState(next)
+    try { localStorage.setItem(LS, JSON.stringify(next)); setError(null) } catch { setError('Could not save: this device is out of storage. Try a smaller screenshot.') }
+  }, [])
+  const unlock = useCallback(async (p: string | null) => p !== null, [])
+  return { state, save, canEdit: true, unlock, error }
+}
+
+/** Shared mode: live data from Firestore. Reading is public; writing needs the editor sign-in (the group PIN). */
+function useFirebaseSchedule() {
+  const { db, auth } = fb!
+  const [config, setConfig] = useState<Partial<Config> | null | undefined>(undefined) // undefined = still loading
+  const [games, setGames] = useState<Game[] | null>(null)
+  const [pics, setPics] = useState<Pic[]>([])
+  const [editor, setEditor] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!sb) return
-    let alive = true
-    const load = async () => {
-      const { data, error } = await sb.from('schedule_state').select('data').eq('id', 1).maybeSingle()
-      if (!alive) return
-      if (error) setError(error.message)
-      setState(normalize(data?.data))
-    }
-    load()
-    const ch = sb.channel('schedule').on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_state' }, load).subscribe()
-    return () => { alive = false; sb.removeChannel(ch) }
-  }, [])
+    const fail = (e: Error) => setError(e.message)
+    const offs = [
+      onSnapshot(doc(db, 'club', 'state'), (s) => setConfig(s.exists() ? (s.data() as Partial<Config>) : null), fail),
+      onSnapshot(collection(db, 'games'), (s) => setGames(s.docs.map((d) => d.data() as Game)), fail),
+      onSnapshot(collection(db, 'pics'), (s) => setPics(s.docs.map((d) => d.data() as Pic)), fail),
+      onAuthStateChanged(auth, (u) => setEditor(!!u)),
+    ]
+    return () => offs.forEach((off) => off())
+  }, [db, auth])
 
-  // Local mode needs no PIN; shared mode needs a verified one.
-  const canEdit = !isShared || !!pin
+  const state = useMemo(() => (config === undefined || games === null ? null : joinState(config, games, pics, seed())), [config, games, pics])
+  const current = useRef(state)
+  current.current = state
 
   const save = useCallback(async (next: ScheduleState) => {
-    setState(next)
-    if (!sb) { try { localStorage.setItem(LS, JSON.stringify(next)); setError(null) } catch { setError('Could not save: this device is out of storage. Try a smaller screenshot.') } return }
-    const { error } = await sb.rpc('save_state', { p_pin: pin, p_data: next })
-    if (error) { setError(error.message); if (/pin/i.test(error.message)) unlock(null) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin])
+    const prev = current.current
+    if (!prev) return
+    const d = diffState(prev, next)
+    const batch = writeBatch(db)
+    if (d.config) batch.set(doc(db, 'club', 'state'), d.config)
+    d.gamesSet.forEach((g) => batch.set(doc(db, 'games', g.id), g))
+    d.gamesDel.forEach((id) => batch.delete(doc(db, 'games', id)))
+    d.picsSet.forEach((p) => batch.set(doc(db, 'pics', p.id), p))
+    d.picsDel.forEach((id) => batch.delete(doc(db, 'pics', id)))
+    try {
+      await batch.commit()
+      setError(null)
+    } catch (e) {
+      const code = (e as { code?: string }).code
+      if (code === 'permission-denied') { setError('Editing is locked. Enter the group PIN to make changes.'); await signOut(auth) }
+      else setError((e as Error).message)
+    }
+  }, [db, auth])
 
   const unlock = useCallback(async (p: string | null): Promise<boolean> => {
-    if (p === null) { try { sessionStorage.removeItem(PIN_KEY) } catch { /* */ } setPin(null); return false }
-    if (!sb) return true
-    const { data } = await sb.rpc('check_pin', { p_pin: p })
-    if (data === true) { try { sessionStorage.setItem(PIN_KEY, p) } catch { /* */ } setPin(p); setError(null); return true }
-    return false
-  }, [])
+    if (p === null) { await signOut(auth); return false }
+    try { await signInWithEmailAndPassword(auth, editorEmail, p); setError(null); return true } catch { return false }
+  }, [auth])
 
-  return { state, save, canEdit, unlock, error }
+  return { state, save, canEdit: editor, unlock, error }
 }
+
+export const useSchedule = fb ? useFirebaseSchedule : useLocalSchedule
+

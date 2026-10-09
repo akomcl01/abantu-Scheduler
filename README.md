@@ -24,13 +24,20 @@ npm test        # rotation logic tests
 npm run build
 ```
 
-## Share with the group (optional)
+## Share with the group (Firebase)
 
-Without config the app runs in **local mode** (saved in your browser). To make one live schedule everyone sees:
+Without config the app runs in **local mode** (saved on this device only). To make one live schedule everyone sees:
 
-1. Create a free [Supabase](https://supabase.com) project.
-2. Run `supabase/schema.sql` in the SQL editor (change the default PIN `abantu`).
-3. Copy `.env.example` to `.env` and fill `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
-4. Deploy (e.g. Vercel) with the same two env vars. Everyone can view; editing needs the PIN.
+1. [Firebase console](https://console.firebase.google.com) > **Add project** (the free Spark plan is enough).
+2. **Build > Firestore Database** > Create database (production mode, any region).
+3. **Build > Authentication** > Get started > enable **Email/Password**. Then **Users > Add user**: email `abantu-editor@abantu.app`, password = **the group PIN**. (Use another email if you like, and change it in `firestore.rules` and `.env` too.)
+4. **Project settings > Your apps > Web (`</>`)**: register an app and copy `apiKey`, `projectId`, `appId`.
+5. Copy `.env.example` to `.env` and fill those three values.
+6. **Firestore > Rules**: paste the contents of `firestore.rules` and Publish. (Or `npx firebase-tools deploy --only firestore:rules`.)
+7. `npm run dev` and open Settings. Unlock editing with the PIN.
 
-Stack: Vite, React, TypeScript, Tailwind CSS v4, Supabase.
+Everyone can read the schedule. Only someone who knows the PIN can change it. Games are stored one document each, so two people logging at the same time never overwrite each other. Record screenshots are stored in Firestore (compressed), not Cloud Storage, so no paid plan is needed.
+
+To publish the site: `npm run build`, then `npx firebase-tools deploy --only hosting` (set your project with `npx firebase-tools use <project-id>` first).
+
+Stack: Vite, React, TypeScript, Tailwind CSS v4, Firebase (Firestore + Auth).

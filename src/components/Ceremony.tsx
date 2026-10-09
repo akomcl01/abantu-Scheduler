@@ -52,7 +52,9 @@ function Screens({ info, onClose }: { info: NonNullable<ReturnType<typeof latest
   return (
     <div className="fixed inset-0 z-[60] overflow-y-auto bg-paper" role="dialog" aria-modal aria-label="Handover">
       <div className="mx-auto flex min-h-full max-w-md flex-col px-5 py-8">
-        {step === 0 ? <Farewell f={f} out={info.out} stats={{ games: info.count, ...info.games }} onNext={() => setStep(1)} /> : <Contract w={w} coach={info.inn} signed={signed} onSign={() => setSigned(true)} onClose={onClose} />}
+        {step === 0 ? <Farewell f={f} out={info.out} stats={{ games: info.count, ...info.games }} onNext={() => setStep(1)} />
+          : step === 1 ? <Welcome w={w} inn={info.inn} season={info.season?.name} from={info.from} end={info.season?.end} onNext={() => setStep(2)} />
+          : <Contract w={w} coach={info.inn} signed={signed} onSign={() => setSigned(true)} onClose={onClose} />}
       </div>
     </div>
   )
@@ -76,6 +78,27 @@ function Farewell({ f, out, stats, onNext }: { f: ReturnType<typeof farewell>; o
       )}
       <p className="mt-6 text-center text-sm italic text-mute">{f.sign}</p>
       <Btn variant="primary" className="mt-auto w-full pt-0" onClick={onNext} style={{ marginTop: '2rem' }}>Next</Btn>
+    </>
+  )
+}
+
+function Welcome({ w, inn, season, from, end, onNext }: { w: ReturnType<typeof welcome>; inn: Member; season?: string; from: string; end?: string; onNext: () => void }) {
+  const tiles = [['Season', season ?? 'Open'], ['Starts', fmtShort(from)], ['Ends', end ? fmtShort(end) : '–']] as const
+  return (
+    <>
+      <p className="rise-in text-center text-xs font-semibold uppercase tracking-[0.22em] text-gold">📣 {w.kicker}</p>
+      <h1 className="rise-in mt-3 break-words text-center font-display text-5xl leading-[0.95]" style={{ animationDelay: '80ms' }}>{w.headline}</h1>
+      <PlayerCard m={inn} className="rise-in mx-auto mt-7 w-40" />
+      <div className="mt-8 space-y-4 text-[15px] leading-relaxed">
+        {w.paragraphs.map((p, i) => <p key={i} className="rise-in text-mute" style={{ animationDelay: `${200 + i * 120}ms` }}>{p}</p>)}
+      </div>
+      <div className="rise-in mt-6 grid grid-cols-3 gap-2 text-center" style={{ animationDelay: '600ms' }}>
+        {tiles.map(([k, v]) => (
+          <div key={k} className="rounded-xl border border-hair bg-card px-1 py-3"><p className="truncate font-display text-2xl leading-none">{v}</p><p className="mt-1 text-[11px] uppercase tracking-wider text-mute">{k}</p></div>
+        ))}
+      </div>
+      <p className="mt-6 text-center text-sm italic text-mute">{w.sign}</p>
+      <Btn variant="primary" className="mt-auto w-full pt-0" onClick={onNext} style={{ marginTop: '2rem' }}>{w.nextCta}</Btn>
     </>
   )
 }
