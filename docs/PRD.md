@@ -22,14 +22,14 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 | Home | Week strip (Mon to Sun, Coach and games per day), Coach card, losses-in-a-row dots, one-tap game logging, League and Playoff record cards, order of play, next games |
 | Records | League and Playoff W/D/L with proportional bar; optional screenshot of the in-game record per season |
 | Calendar | Month grid with Coach per game day, results, seasons list, playoffs and events with trophy markers |
-| Squad | FC-style player cards; Squad view and coach league table (win rate, form); coach profile with season-by-season career |
+| Squad | player card frames; Squad view and coach league table (win rate, form); coach profile with season-by-season career |
 | Handover ceremony | On a Coach change: "Comunicado Oficial" thank-you, then a fun contract to sign. Wording is templated in `src/lib/messages.ts` with seeded variations |
 | Settings | First player start date, seasons, FC or Classic look, share link, replay ceremony |
 
 ## Design
 - Default look mimics the FC 27 Pro Clubs menu (dark, white italic headings, mint accent, gold highlights). "Classic" is the warm paper variant.
 - Mobile first. Floating pill nav at the bottom at every size.
-- Player cards follow the FC 27 Clubs layout. A real in-game card image at `public/cards/<name>.png` overrides the generated card.
+- Player cards are **only a frame**: an exact outline (ratio `CARD_ASPECT` in `PlayerCard.tsx`) that the real FC card picture fills edge to edge. Nothing on the card is editable (no position, overall or stats). Add the picture by uploading or pasting it in Squad > card > Edit card, or save it as `public/cards/<name>.png`.
 - Brand: the Abantu FC crest is the app icon.
 - Wording: always say **Coach**. Use neutral pronouns (they/their) in generated text.
 

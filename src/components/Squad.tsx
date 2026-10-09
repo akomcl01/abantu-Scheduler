@@ -4,7 +4,6 @@ import { COLORS, newMember } from '../lib/store'
 import type { Member, ScheduleState } from '../lib/rotation'
 import { controllerFor, nextMember, todayStr } from '../lib/rotation'
 import PlayerCard from './PlayerCard'
-import { getPosition, getRating, getStats, POSITIONS, STAT_LABELS } from '../lib/card'
 import { CoachSheet, CoachTable } from './Coaches'
 import { Btn, Card, Icon, ICONS, Pill, Segmented, Sheet } from './ui'
 
@@ -78,7 +77,7 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
 const field = 'mt-2 min-h-12 w-full rounded-2xl border border-hair bg-paper px-4 placeholder:text-mute'
 
 function EditSheet({ member, isNew, onSave, onDelete, onClose }: { member: Member; isNew: boolean; onSave: (m: Member) => void; onDelete: () => void; onClose: () => void }) {
-  const [m, setM] = useState<Member>({ ...member, position: getPosition(member), stats: getStats(member), rating: getRating(member) })
+  const [m, setM] = useState<Member>({ ...member })
   const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const onFile = async (f?: File) => {
@@ -86,39 +85,20 @@ function EditSheet({ member, isNew, onSave, onDelete, onClose }: { member: Membe
     setBusy(true)
     try { const url = await compressImage(f, 900, 0.85, true); setM((x) => ({ ...x, cardImage: url })) } finally { setBusy(false); if (file.current) file.current.value = '' }
   }
-  const setStat = (i: number, v: string) => setM({ ...m, stats: m.stats!.map((x, j) => (j === i ? Math.min(99, Math.max(1, Number(v) || 1)) : x)) })
   return (
     <Sheet title={isNew ? 'Add player' : 'Edit player'} onClose={onClose}>
-      <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if (m.name.trim()) onSave({ ...m, name: m.name.trim(), cardImage: m.cardImage?.trim() || undefined }) }}>
+      <form className="space-y-5" onPaste={(e) => { const f = [...e.clipboardData.files].find((x) => x.type.startsWith('image/')); if (f) { e.preventDefault(); onFile(f) } }} onSubmit={(e) => { e.preventDefault(); if (m.name.trim()) onSave({ ...m, name: m.name.trim(), cardImage: m.cardImage?.trim() || undefined }) }}>
         <PlayerCard m={m} className="mx-auto w-36" />
         <label className="block text-sm font-medium">Character name
           <input autoFocus className={field} value={m.name} onChange={(e) => setM({ ...m, name: e.target.value })} placeholder="e.g. Kwame" />
         </label>
         <div>
-          <p className="text-sm font-medium">Player picture</p>
-          <p className="mt-1 text-xs text-mute">Goes inside the card. A cut-out PNG of your Clubs player (no background) looks best.</p>
+          <p className="text-sm font-medium">Card picture</p>
+          <p className="mt-1 text-xs text-mute">The player's card from the game, cropped to the card's edge. It fills the frame above. Upload it, or paste it (Ctrl or Cmd + V).</p>
           <input ref={file} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
           <div className="mt-2 flex gap-2">
             <Btn type="button" className="flex-1" disabled={busy} onClick={() => file.current?.click()}>{busy ? 'Uploading…' : m.cardImage ? 'Replace image' : 'Upload image'}</Btn>
             {m.cardImage && <Btn type="button" onClick={() => setM({ ...m, cardImage: undefined })}>Remove</Btn>}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block text-sm font-medium">Position
-            <select className={field} value={m.position} onChange={(e) => setM({ ...m, position: e.target.value })}>{POSITIONS.map((p) => <option key={p}>{p}</option>)}</select>
-          </label>
-          <label className="block text-sm font-medium">Overall
-            <input type="number" min={1} max={99} className={field} value={m.rating} onChange={(e) => setM({ ...m, rating: Math.min(99, Math.max(1, Number(e.target.value) || 1)) })} />
-          </label>
-        </div>
-        <div>
-          <p className="mb-2 text-sm font-medium">Stats</p>
-          <div className="grid grid-cols-3 gap-2">
-            {STAT_LABELS.map((l, i) => (
-              <label key={l} className="text-xs font-semibold text-mute">{l}
-                <input type="number" min={1} max={99} className="mt-1 min-h-11 w-full rounded-xl border border-hair bg-paper px-3 text-base text-ink" value={m.stats![i]} onChange={(e) => setStat(i, e.target.value)} />
-              </label>
-            ))}
           </div>
         </div>
         <div>

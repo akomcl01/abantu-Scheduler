@@ -71,12 +71,6 @@ button { cursor: pointer; }
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.08)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)) drop-shadow(0 18px 24px rgba(0, 0, 0, 0.5));
   will-change: transform;
 }
-.card-foil {
-  background: linear-gradient(115deg, transparent 25%, rgba(255, 90, 170, 0.55) 38%, rgba(255, 220, 110, 0.55) 45%, rgba(110, 255, 190, 0.55) 52%, rgba(100, 180, 255, 0.55) 59%, transparent 72%);
-  background-size: 260% 260%;
-  background-position: var(--mx) var(--my);
-  mix-blend-mode: color-dodge;
-}
 @keyframes card-sweep { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 .card-sweep {
   background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 48%, rgba(255, 255, 255, 0.1) 54%, transparent 62%);

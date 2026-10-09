@@ -19,7 +19,7 @@ Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls 
 
 ## House rules
 - Say **Coach**. Ceremony label is "Comunicado Oficial" (spelling as in `messages.ts`). Use neutral pronouns (they/their) in generated text.
-- Mobile first, floating pill nav at every size. Primary button is mint. Player cards follow the FC 27 Clubs layout.
+- Mobile first, floating pill nav at every size. Primary button is mint. Player cards are only a frame for the real FC card picture (upload or paste); no editable stats.
 - A game counts for whoever was Coach when played; league and playoff games both count toward the 3-loss rule.
 
 ## Working rules (save tokens)

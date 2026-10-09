@@ -3,9 +3,6 @@ export interface Member {
   name: string
   color: string
   active: boolean
-  position?: string // card position, e.g. ST
-  rating?: number // card overall
-  stats?: number[] // PAC SHO PAS DRI DEF PHY
   cardImage?: string // player picture shown inside the card (data URL or /cards/x.png); falls back to /cards/<name>.png
 }
 
