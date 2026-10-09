@@ -105,3 +105,28 @@ export function ResultButtons({ value, onPick, onClear }: { value?: Result; onPi
     </div>
   )
 }
+
+/** Proportional win / draw / loss bar (FotMob head-to-head style). */
+export function RecordBar({ w, d, l }: { w: number; d: number; l: number }) {
+  const n = w + d + l
+  return (
+    <div className="flex h-2 w-full overflow-hidden rounded-full bg-hair" role="img" aria-label={`${w} wins, ${d} draws, ${l} losses`}>
+      {n > 0 && <><span className="bg-win" style={{ width: `${(w / n) * 100}%` }} /><span className="bg-mute/60" style={{ width: `${(d / n) * 100}%` }} /><span className="bg-loss" style={{ width: `${(l / n) * 100}%` }} /></>}
+    </div>
+  )
+}
+
+/** Win-rate chip, coloured like a FotMob rating. */
+export const RateChip = ({ pct }: { pct: number | null }) => (
+  <span className={`inline-grid min-w-12 place-items-center rounded-lg px-2 py-1 text-xs font-bold ${pct === null ? 'bg-sand text-mute' : pct >= 60 ? 'bg-win/20 text-win' : pct >= 40 ? 'bg-gold/20 text-gold' : 'bg-loss/20 text-loss'}`}>{pct === null ? '–' : `${pct}%`}</span>
+)
+
+export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { id: T; label: string }[]; onChange: (v: T) => void; label: string }) {
+  return (
+    <div className="flex gap-1 rounded-full bg-sand p-1" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.id} onClick={() => onChange(o.id)} aria-pressed={value === o.id} className={`min-h-9 flex-1 rounded-full px-4 text-sm font-semibold transition ${value === o.id ? 'bg-ink text-paper' : 'text-mute'}`}>{o.label}</button>
+      ))}
+    </div>
+  )
+}

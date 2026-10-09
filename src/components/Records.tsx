@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { compressImage } from '../lib/image'
 import type { Comp, ScheduleState } from '../lib/rotation'
 import { recordFor, seasonOn, todayStr } from '../lib/rotation'
-import { Btn, Card, Icon, ICONS, SectionTitle, Sheet } from './ui'
+import { Btn, Card, Icon, ICONS, RecordBar, SectionTitle, Sheet } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
 
@@ -50,6 +50,7 @@ function RecordCard({ title, t, pic, canEdit, onNeedUnlock, onPic, gold = false 
           <div key={k} className="rounded-xl bg-sand py-2"><p className={`font-display text-3xl leading-none ${c}`}>{v}</p><p className="mt-1 text-[11px] uppercase tracking-wider text-mute">{k === 'W' ? 'Wins' : k === 'D' ? 'Draws' : 'Losses'}</p></div>
         ))}
       </div>
+      <div className="mt-3"><RecordBar {...t} /></div>
       <p className="mt-2 text-xs text-mute">{games === 0 ? 'No games logged yet' : `${games} game${games === 1 ? '' : 's'} logged`}</p>
 
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />

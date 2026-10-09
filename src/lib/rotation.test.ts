@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, seasonOn, type ScheduleState } from './rotation'
+import { careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, seasonOn, type ScheduleState } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -94,5 +94,26 @@ describe('league vs playoff record', () => {
     expect(r.league).toEqual({ w: 1, d: 0, l: 0 })
     expect(r.playoff).toEqual({ w: 1, d: 0, l: 1 })
     expect(recordFor(games, null).league.l).toBe(1)
+  })
+})
+
+describe('coach records', () => {
+  it('credits each game to whoever was coach at that time, even mid-day', () => {
+    const games = [g('2026-10-04', 'W'), g('2026-10-11', 'L', '18:00:00'), g('2026-10-11', 'L', '19:30:00'), g('2026-10-24', 'W')]
+    const s = { ...base, benches: ['2026-10-11T19:00:00'], games }
+    const by = coachGames(s)
+    expect(by.get('a')?.map((x) => x.result)).toEqual(['W', 'L'])
+    expect(by.get('b')?.map((x) => x.result)).toEqual(['L']) // 19:30 on the 11th, after the bench
+    expect(by.get('c')?.map((x) => x.result)).toEqual(['W']) // season 2 start 23 Oct
+  })
+  it('builds a season-by-season career with league/playoff splits and win rate', () => {
+    const games = [g('2026-09-30', 'W'), { ...g('2026-10-04', 'L'), kind: 'playoff' as const }, g('2026-10-07', 'W')]
+    const c = careerFor({ ...base, games }, 'a')
+    expect(c).toHaveLength(1)
+    expect(c[0].name).toBe('Season 1')
+    expect(c[0].league).toEqual({ w: 2, d: 0, l: 0 })
+    expect(c[0].playoff).toEqual({ w: 0, d: 0, l: 1 })
+    expect(winRate(c[0].all)).toBe(67)
+    expect(winRate({ w: 0, d: 0, l: 0 })).toBeNull()
   })
 })

@@ -5,12 +5,15 @@ import type { Member, ScheduleState } from '../lib/rotation'
 import { controllerFor, nextMember, todayStr } from '../lib/rotation'
 import PlayerCard from './PlayerCard'
 import { getPosition, getRating, getStats, POSITIONS, STAT_LABELS } from '../lib/card'
-import { Btn, Card, Icon, ICONS, Pill, Sheet } from './ui'
+import { CoachSheet, CoachTable } from './Coaches'
+import { Btn, Card, Icon, ICONS, Pill, Segmented, Sheet } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
 
 export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const [editing, setEditing] = useState<Member | null>(null)
+  const [profile, setProfile] = useState<Member | null>(null)
+  const [view, setView] = useState<'cards' | 'table'>('cards')
   const nowId = (controllerFor(state, todayStr()) ?? state.members.find((m) => m.active))?.id
   const nextId = nowId ? nextMember(state, nowId)?.id : undefined
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
@@ -31,10 +34,13 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
         <Btn variant="primary" onClick={guard(() => setEditing(newMember(state.members.length)))}><Icon d={ICONS.plus} size={18} />Add</Btn>
       </div>
 
+      <Segmented<'cards' | 'table'> label="View" value={view} onChange={setView} options={[{ id: 'cards', label: 'Squad' }, { id: 'table', label: 'Table' }]} />
+
+      {view === 'table' ? <CoachTable state={state} onOpen={setProfile} /> : (
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
         {state.members.map((m, i) => (
           <div key={m.id} className="flex flex-col items-center gap-3">
-            <button onClick={guard(() => setEditing(m))} className="w-full" aria-label={`Edit ${m.name}`}>
+            <button onClick={() => setProfile(m)} className="w-full" aria-label={`${m.name} profile`}>
               <PlayerCard m={m} dim={!m.active} className="mx-auto w-full max-w-[200px]" />
             </button>
             <div className="flex items-center gap-1">
@@ -48,7 +54,10 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
           </div>
         ))}
       </div>
+      )}
       {!state.members.length && <Card className="p-6 text-mute">No players yet. Add the first one.</Card>}
+
+      {profile && <CoachSheet state={state} m={profile} onClose={() => setProfile(null)} onEdit={guard(() => { setEditing(profile); setProfile(null) })} />}
 
       {editing && (
         <EditSheet

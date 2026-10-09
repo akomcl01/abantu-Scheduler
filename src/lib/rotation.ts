@@ -152,3 +152,43 @@ export function matchesFrom(state: ScheduleState, from: string, days: number): M
   }
   return out
 }
+
+/** Every logged game, credited to whoever was coach when it was played. */
+export function coachGames(state: ScheduleState): Map<string, Game[]> {
+  const stints = buildStints(state)
+  const out = new Map<string, Game[]>()
+  for (const g of [...state.games].sort((a, b) => a.at.localeCompare(b.at))) {
+    let hit: Stint | undefined
+    for (const st of stints) if (st.at <= g.at) hit = st
+    if (!hit) continue
+    out.set(hit.memberId, [...(out.get(hit.memberId) ?? []), g])
+  }
+  return out
+}
+
+export const winRate = (t: { w: number; d: number; l: number }) => {
+  const n = t.w + t.d + t.l
+  return n ? Math.round((t.w / n) * 100) : null
+}
+
+/** A coach's record season by season (newest first), split into league and playoffs. */
+export function careerFor(state: ScheduleState, memberId: string) {
+  const games = coachGames(state).get(memberId) ?? []
+  const rows = new Map<string, { id: string; name: string; start: string; games: Game[] }>()
+  for (const g of games) {
+    const se = seasonOn(state, g.date)
+    const id = se?.id ?? 'none'
+    const row = rows.get(id) ?? { id, name: se?.name ?? 'No season set', start: se?.start ?? '0000', games: [] }
+    row.games.push(g)
+    rows.set(id, row)
+  }
+  return [...rows.values()]
+    .sort((a, b) => b.start.localeCompare(a.start))
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      league: tally(r.games.filter((g) => compOf(g) === 'league')),
+      playoff: tally(r.games.filter((g) => compOf(g) === 'playoff')),
+      all: tally(r.games),
+    }))
+}
