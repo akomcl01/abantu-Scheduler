@@ -103,8 +103,8 @@ export const farewell = (c: FarewellCtx) => {
   const v = { out: c.out, inn: c.inn, club: CLUB, games: c.games, w: c.w }
   if (c.reason === 'benched') {
     return {
-      kicker: '📣 Communicado Official',
-      headline: `Farewell, ${c.out}`,
+      kicker: `📣 Farewell · ${c.out}`,
+      headline: 'Communicado Official',
       paragraphs: [FUNNY_OPEN, FUNNY_SALUTE, FUNNY_WELCOME, FUNNY_SIGNOFF].map((pool) => fill(pick(r, pool), v)),
       sign: CLUB,
     }
@@ -112,7 +112,7 @@ export const farewell = (c: FarewellCtx) => {
   const paragraphs = [fill(pick(r, FORMAL_OPEN), v), fill(pick(r, FORMAL_MIDDLE), v)]
   if (c.games > 0) paragraphs.push(fill(pick(r, FORMAL_STATS), v))
   paragraphs.push(fill(pick(r, FORMAL_CLOSE), v))
-  return { kicker: '📣 Communicado Official', headline: `Thank you, Coach ${c.out}`, paragraphs, sign: CLUB }
+  return { kicker: `📣 Thank you · ${c.out}`, headline: 'Communicado Official', paragraphs, sign: CLUB }
 }
 
 // --- welcome contract -------------------------------------------------------------------------

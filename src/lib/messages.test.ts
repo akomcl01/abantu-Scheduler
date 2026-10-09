@@ -29,6 +29,13 @@ describe('handover messages', () => {
       expect(w.clauses.some((c) => /Three \(3\)/.test(c))).toBe(true)
     }
   })
+  it('both farewells are titled Communicado Official and name the outgoing coach', () => {
+    for (const reason of ['season', 'benched'] as const) {
+      const m = f('x', reason)
+      expect(m.headline).toBe('Communicado Official')
+      expect(m.kicker).toContain('Theo')
+    }
+  })
   it('the comedy send-off welcomes the new coach; the formal one adds stats when games were played', () => {
     expect(text(f('x', 'benched'))).toContain('Olamide')
     expect(text(f('x', 'season'))).toMatch(/12 games/)
