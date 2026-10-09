@@ -23,7 +23,7 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 | Records | League and Playoff W/D/L with proportional bar; optional screenshot of the in-game record per season |
 | Calendar | Month grid with Coach per game day, results, seasons list, playoffs and events with trophy markers |
 | Squad | FC-style player cards; Squad view and coach league table (win rate, form); coach profile with season-by-season career |
-| Handover ceremony | On a Coach change: "Communicado Oficial" thank-you, then a fun contract to sign. Wording is templated in `src/lib/messages.ts` with seeded variations |
+| Handover ceremony | On a Coach change: "Communicado Official" thank-you, then a fun contract to sign. Wording is templated in `src/lib/messages.ts` with seeded variations |
 | Settings | First player start date, seasons, FC or Classic look, share link, replay ceremony |
 
 ## Design

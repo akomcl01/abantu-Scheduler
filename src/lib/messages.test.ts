@@ -21,7 +21,7 @@ describe('handover messages', () => {
       const w = welcome({ seed: `s${i}`, name: 'Olamide', out: 'Theo', season: 'Season 2', term: 'x', contractNo: 3 })
       expect(`${w.intro}${w.clauses.join('')}`).not.toMatch(/\{\w+\}/)
       expect(w.intro).toContain('Olamide')
-      expect(w.headline).toBe('Communicado Oficial')
+      expect(w.headline).toBe('Communicado Official')
       expect(w.paragraphs[0]).toMatch(/coach/i) // welcomed as a coach
       expect(w.paragraphs.join(' ')).not.toMatch(/\bplayer\b|signing|skill/i)
       expect(w.paragraphs.join(' ')).not.toMatch(/\{\w+\}/)
@@ -29,10 +29,10 @@ describe('handover messages', () => {
       expect(w.clauses.some((c) => /Three \(3\)/.test(c))).toBe(true)
     }
   })
-  it('both farewells are titled Communicado Oficial and name the outgoing coach', () => {
+  it('both farewells are titled Communicado Official and name the outgoing coach', () => {
     for (const reason of ['season', 'benched'] as const) {
       const m = f('x', reason)
-      expect(m.headline).toBe('Communicado Oficial')
+      expect(m.headline).toBe('Communicado Official')
       expect(m.kicker).toContain('Theo')
     }
   })
