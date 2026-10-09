@@ -56,20 +56,20 @@ const fill = (t: string, v: Record<string, string | number>) => t.replace(/\{(\w
 
 // --- comedy send-off (benched after 3 straight losses) ----------------------------------------
 const FUNNY_OPEN = [
-  `After a heroic stint of service (and questionable decisions), our beloved {out} has decided to hang up the headset and retire from active duty. Rumor has it they're pursuing a quieter life — something about "finally getting to play without all the stress."`,
-  `Breaking news from the dugout: after a stint of heroic service (and a few decisions we are still discussing), {out} has stepped away from the touchline. Sources say they're chasing a calmer life — apparently "just playing, no tactics, no stress."`,
-  `It is with mixed emotions (mostly laughter) that we announce {out} is hanging up the clipboard. After a heroic run in charge, and some choices history will judge, they are heading for a quieter life and a very long sit-down.`,
-  `The rumours are true: {out} has left the building. After a heroic stint (and some truly questionable decisions), they have traded the headset for a comfy chair and a snack.`,
+  `After a heroic stint of service (and questionable decisions), our beloved {out} has decided to hang up the Any headset and retire from active duty. Rumor has it they're pursuing a quieter life — something about "finally getting to play without all the stress."`,
+  `Breaking news from the dugout: after a stint of heroic service (and a few decisions we are still discussing), {out} has stepped down as our Any. Sources say they're chasing a calmer life — apparently "just playing, no tactics, no stress."`,
+  `It is with mixed emotions (mostly laughter) that we announce {out} is hanging up the Any headset. After a heroic run in charge, and some choices history will judge, they are heading for a quieter life and a very long sit-down.`,
+  `The rumours are true: {out} has left the building. After a heroic stint (and some truly questionable decisions), they have traded the Any headset for a comfy chair and a snack.`,
 ]
 const FUNNY_SALUTE = [
-  `We salute your legendary pings, your dramatic timeouts, and your ability to accidentally start chaos in record time. You'll always be remembered as the coach who kept us guessing (and sometimes panicking).`,
-  `We salute your bold substitutions, your halftime speeches, and your gift for turning a quiet match into a full emergency. You'll always be the coach who kept us guessing (and occasionally praying).`,
-  `Thank you for the dramatic timeouts, the surprise formations, and the group chat meltdowns. You kept us guessing, you sometimes had us panicking, and we wouldn't change a thing.`,
+  `We salute your legendary pings, your dramatic timeouts, and your ability to accidentally start chaos in record time. You'll always be remembered as the Any who kept us guessing (and sometimes panicking).`,
+  `We salute your bold substitutions, your halftime speeches, and your gift for turning a quiet match into a full emergency. You'll always be the Any who kept us guessing (and occasionally praying).`,
+  `Thank you for the dramatic timeouts, the surprise formations, and the group chat meltdowns. You kept us guessing as our Any, you sometimes had us panicking, and we wouldn't change a thing.`,
 ]
 const FUNNY_WELCOME = [
-  `But don't worry — the madness continues! Please welcome our newest Coach {inn}, who has bravely volunteered to step into the line of fire. May their comms be clear and their patience infinite.`,
-  `The show goes on! Stepping up to the touchline is our newest Coach {inn}, who has courageously walked into the line of fire. May the lag be low and the patience endless.`,
-  `Fear not — somebody has to take the hot seat, and that somebody is {inn}. Please welcome our newest Coach. May their comms be crisp and their nerves be steel.`,
+  `But don't worry — the madness continues! Please welcome our newest Any, {inn}, who has bravely volunteered to control the whole team and step into the line of fire. May their comms be clear and their patience infinite.`,
+  `The show goes on! Taking over the whole team is our newest Any, {inn}, who has courageously walked into the line of fire. May the lag be low and the patience endless.`,
+  `Fear not — somebody has to take the hot seat, and that somebody is {inn}. Please welcome our newest Any. May their comms be crisp and their nerves be steel.`,
 ]
 const FUNNY_SIGNOFF = [
   `Farewell, {out} — may your next role have fewer complaints and more snacks. 🎤`,
@@ -79,9 +79,9 @@ const FUNNY_SIGNOFF = [
 
 // --- formal thank-you (season simply ended) ---------------------------------------------------
 const FORMAL_OPEN = [
-  `We extend our heartfelt gratitude to Coach {out} as they step down from their role.`,
-  `On behalf of everyone at {club}, we express our sincere thanks to Coach {out} as their time in charge comes to a close.`,
-  `It is with great appreciation that we acknowledge the service of Coach {out}, who now steps down from the role.`,
+  `We extend our heartfelt gratitude to our Any, {out}, as they step down from the role.`,
+  `On behalf of everyone at {club}, we express our sincere thanks to {out} as their time as our Any comes to a close.`,
+  `It is with great appreciation that we acknowledge the service of {out}, who now steps down as our Any.`,
 ]
 const FORMAL_MIDDLE = [
   `Their exemplary service, unwavering dedication, and significant contributions have left a lasting impact on our organization. Throughout their tenure, they embodied professionalism, integrity, and a true commitment to excellence.`,
@@ -112,28 +112,28 @@ export const farewell = (c: FarewellCtx) => {
   const paragraphs = [fill(pick(r, FORMAL_OPEN), v), fill(pick(r, FORMAL_MIDDLE), v)]
   if (c.games > 0) paragraphs.push(fill(pick(r, FORMAL_STATS), v))
   paragraphs.push(fill(pick(r, FORMAL_CLOSE), v))
-  return { kicker: '📣 Communicado Official', headline: `Thank you, Coach ${c.out}`, paragraphs, sign: CLUB }
+  return { kicker: '📣 Communicado Official', headline: `Thank you, ${c.out}`, paragraphs, sign: CLUB }
 }
 
 // --- welcome contract -------------------------------------------------------------------------
 const WELCOME_INTRO = [
   `We are delighted to welcome {name} to {club}. Their arrival marks an exciting new chapter for our team as we continue to strengthen our squad and uphold our commitment to excellence both on and off the field. We look forward to the skill, energy, and passion {name} will bring to the club and wish them great success in the seasons ahead.`,
-  `A warm welcome to {name}, our new coach at {club}. Their arrival opens an exciting new chapter as we keep building the squad and holding ourselves to a high standard on and off the pitch. We look forward to the skill, energy, and passion {name} brings, and wish them great success ahead.`,
-  `{club} is proud to announce {name} as our new head coach. We expect big things: skill, energy, and plenty of passion. Welcome aboard, and may the seasons ahead be kind.`,
+  `A warm welcome to {name}, our new Any at {club}. Their arrival opens an exciting new chapter as we keep building the squad and holding ourselves to a high standard on and off the pitch. We look forward to the skill, energy, and passion {name} brings, and wish them great success ahead.`,
+  `{club} is proud to announce {name} as our new Any, in full control of the whole team. We expect big things: skill, energy, and plenty of passion. Welcome aboard, and may the seasons ahead be kind.`,
 ]
-const CLAUSE_CONTROL = [`The Coach shall have full control of the Abantu squad{season}, on Wednesdays and Sundays alike.`]
+const CLAUSE_CONTROL = [`The Any shall have full control of the whole Abantu team{season}, on Wednesdays and Sundays alike.`]
 const CLAUSE_DISMISSAL = [
   `Three (3) consecutive defeats shall result in immediate dismissal. The board is not sentimental.`,
   `Three (3) defeats in a row shall end this agreement at once. No appeals, no excuses.`,
 ]
 const CLAUSE_FUN = [
-  `The Coach shall not blame lag, the referee, the controller, or a teammate's internet.`,
+  `The Any shall not blame lag, the referee, the controller, or a teammate's internet.`,
   `Remuneration shall be paid in bragging rights, due in full on the final whistle.`,
   `Victories shall be celebrated humbly and, in the group chat, loudly.`,
   `Excuses shall be limited to one (1) per match, and a doctor's note is required.`,
   `Timeouts shall be called in genuine emergencies only, and never regretted afterwards.`,
   `Criticism from the sofa shall be accepted with grace and a straight face.`,
-  `Snacks shall be provided at the Coach's own expense.`,
+  `Snacks shall be provided at the Any's own expense.`,
   `Mic discipline: pings are encouraged, screaming is a last resort.`,
 ]
 
@@ -144,7 +144,7 @@ export const welcome = (c: WelcomeCtx) => {
   return {
     kicker: 'Communicado Official',
     club: CLUB,
-    title: 'Coaching contract',
+    title: 'Any contract',
     intro: fill(pick(r, WELCOME_INTRO), v),
     clauses: [
       fill(pick(r, CLAUSE_CONTROL), { season: c.season ? ` for ${c.season}` : '' }),
@@ -154,7 +154,7 @@ export const welcome = (c: WelcomeCtx) => {
     ],
     term: c.term,
     contractNo: c.contractNo,
-    coachLine: 'The Coach',
+    coachLine: 'The Any',
     clubLine: 'For the Club',
     signCta: 'Sign contract',
     doneCta: "Let's go",

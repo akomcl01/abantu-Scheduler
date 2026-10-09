@@ -38,7 +38,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
 
       {cur && (
         <section>
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-mute">On the sticks</p>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-mute">The Any</p>
           <div className="grid grid-cols-[auto_1fr] items-start gap-5 sm:gap-10">
             <PlayerCard m={cur} className="w-36 sm:w-56" />
             <div className="min-w-0">
@@ -75,8 +75,8 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
           {benched && (
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
               <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
-              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as coach.</p>
-              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Appoint {next.name} as coach</Btn>
+              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as the Any.</p>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Appoint {next.name} as the Any</Btn>
             </div>
           )}
           {next && (

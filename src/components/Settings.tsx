@@ -33,7 +33,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
             ))}
           </div>
         </Row>
-        {onReplay && <Row title="Handover ceremony" desc="Watch the latest coach change again: the thank-you and the contract."><Btn onClick={onReplay}>Replay</Btn></Row>}
+        {onReplay && <Row title="Handover ceremony" desc="Watch the latest Any change again: the thank-you and the contract."><Btn onClick={onReplay}>Replay</Btn></Row>}
         <Row title="How it works" desc="One player has the team for a whole season, on Wednesdays and Sundays. If they lose 3 in a row, the next player takes over early." />
         <Row title="Share" desc={isShared ? 'Anyone with this link sees the live schedule.' : 'Saved on this device only for now. Publish the site to share it with the group.'}>
           <Btn onClick={() => { navigator.clipboard?.writeText(location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>{copied ? 'Copied' : 'Copy link'}</Btn>
