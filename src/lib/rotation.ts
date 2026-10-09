@@ -17,6 +17,14 @@ export interface GameEvent {
 
 export type Result = 'W' | 'D' | 'L'
 
+/** One game, logged with a tap. `at` is local time (YYYY-MM-DDTHH:mm:ss) so order within a day is kept. */
+export interface Game {
+  id: string
+  at: string
+  date: string
+  result: Result
+}
+
 export interface Season {
   id: string
   name: string // e.g. Season 1
@@ -32,8 +40,8 @@ export interface ScheduleState {
   members: Member[] // order = order of play
   startDate: string // day the first player takes over
   seasons: Season[]
-  benches: string[] // dates the current player was benched after 3 losses in a row
-  results: Record<string, Result> // match date -> result for whoever had the team
+  benches: string[] // when the current player was benched after 3 losses in a row (date or local timestamp)
+  games: Game[] // every game logged, oldest first
   events?: GameEvent[] // playoffs and other one-off dates
 }
 
@@ -46,6 +54,11 @@ export const parseDate = (s: string) => {
 export const fmtDate = (d: Date) => d.toISOString().slice(0, 10)
 export const addDays = (s: string, n: number) => fmtDate(new Date(parseDate(s).getTime() + n * DAY))
 export const dow = (s: string) => parseDate(s).getUTCDay() // 0 = Sun, 3 = Wed
+export const nowStr = () => {
+  const n = new Date()
+  const p = (x: number) => String(x).padStart(2, '0')
+  return `${n.getFullYear()}-${p(n.getMonth() + 1)}-${p(n.getDate())}T${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`
+}
 export const todayStr = () => {
   const n = new Date()
   return fmtDate(new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())))
@@ -57,7 +70,8 @@ export function nextOnOrAfter(s: string, weekday: number) {
 
 export interface Stint {
   memberId: string
-  from: string
+  from: string // date the stint begins
+  at: string // exact start (a bench can happen mid-day)
   reason: 'start' | 'season' | 'benched'
 }
 
@@ -66,11 +80,11 @@ export function buildStints(state: ScheduleState): Stint[] {
   const active = state.members.filter((m) => m.active)
   if (!active.length) return []
   const changes = [
-    ...state.seasons.filter((x) => x.start > state.startDate).map((x) => ({ date: x.start, reason: 'season' as const, order: 0 })),
-    ...state.benches.filter((d) => d > state.startDate).map((d) => ({ date: d, reason: 'benched' as const, order: 1 })),
+    ...state.seasons.filter((x) => x.start > state.startDate).map((x) => ({ date: x.start, at: x.start, reason: 'season' as const, order: 0 })),
+    ...state.benches.filter((d) => d > state.startDate).map((d) => ({ date: d.slice(0, 10), at: d, reason: 'benched' as const, order: 1 })),
   ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order)
-  const out: Stint[] = [{ memberId: active[0].id, from: state.startDate, reason: 'start' }]
-  changes.forEach((c, i) => out.push({ memberId: active[(i + 1) % active.length].id, from: c.date, reason: c.reason }))
+  const out: Stint[] = [{ memberId: active[0].id, from: state.startDate, at: state.startDate, reason: 'start' }]
+  changes.forEach((c, i) => out.push({ memberId: active[(i + 1) % active.length].id, from: c.date, at: c.at, reason: c.reason }))
   return out
 }
 
@@ -95,15 +109,19 @@ export function nextMember(state: ScheduleState, id: string): Member | null {
 
 export const seasonOn = (state: ScheduleState, date: string) => state.seasons.find((x) => x.start <= date && date <= x.end) ?? null
 
-/** Consecutive losses for whoever has the team now, counting only their own games. */
+export const tally = (games: Game[]) => ({
+  w: games.filter((g) => g.result === 'W').length,
+  d: games.filter((g) => g.result === 'D').length,
+  l: games.filter((g) => g.result === 'L').length,
+})
+
+/** Consecutive losses for whoever has the team now, counting only games since they took over. */
 export function lossStreak(state: ScheduleState, today: string) {
   const st = stintOn(state, today)
-  const games = Object.entries(state.results)
-    .filter(([d]) => st && d >= st.from && d <= today)
-    .sort(([a], [b]) => a.localeCompare(b))
+  const mine = state.games.filter((g) => st && g.at >= st.at && g.date <= today).sort((a, b) => a.at.localeCompare(b.at))
   let streak = 0
-  for (let i = games.length - 1; i >= 0 && games[i][1] === 'L'; i--) streak++
-  return { streak, recent: games.slice(-5).map(([date, result]) => ({ date, result })) }
+  for (let i = mine.length - 1; i >= 0 && mine[i].result === 'L'; i--) streak++
+  return { streak, recent: mine.slice(-8), today: tally(mine.filter((g) => g.date === today)), season: tally(mine) }
 }
 
 export interface Match {

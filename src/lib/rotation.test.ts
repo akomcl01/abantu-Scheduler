@@ -11,8 +11,10 @@ const base: ScheduleState = {
     { id: 's3', name: 'Season 3', start: '2026-12-04', end: '2027-01-20' },
   ],
   benches: [],
-  results: {},
+  games: [],
 }
+let n = 0
+const g = (date: string, result: 'W' | 'D' | 'L', time = '12:00:00') => ({ id: String(n++), date, at: `${date}T${time}`, result })
 
 describe('season rotation', () => {
   it('gives one player the whole season, then the next', () => {
@@ -52,15 +54,23 @@ describe('season rotation', () => {
 })
 
 describe('loss streak', () => {
+  const run = (games: ReturnType<typeof g>[]) => lossStreak({ ...base, games }, '2026-10-12').streak
   it('counts trailing losses and resets on a win or draw', () => {
-    const r = (x: Record<string, 'W' | 'D' | 'L'>) => lossStreak({ ...base, results: x }, '2026-10-12').streak
-    expect(r({ '2026-10-04': 'L', '2026-10-07': 'L', '2026-10-11': 'L' })).toBe(3)
-    expect(r({ '2026-10-04': 'L', '2026-10-07': 'W', '2026-10-11': 'L' })).toBe(1)
-    expect(r({ '2026-10-04': 'L', '2026-10-07': 'L', '2026-10-11': 'D' })).toBe(0)
+    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'L'), g('2026-10-11', 'L')])).toBe(3)
+    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'W'), g('2026-10-11', 'L')])).toBe(1)
+    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'L'), g('2026-10-11', 'D')])).toBe(0)
   })
-  it('only counts the current player’s games', () => {
-    const s = { ...base, benches: ['2026-10-08'], results: { '2026-10-04': 'L' as const, '2026-10-07': 'L' as const, '2026-10-11': 'L' as const } }
-    expect(lossStreak(s, '2026-10-12').streak).toBe(1) // b only has the 11th
+  it('handles many games in one day, in the order they were logged', () => {
+    const day = [g('2026-10-11', 'W', '18:00:00'), g('2026-10-11', 'L', '18:20:00'), g('2026-10-11', 'L', '18:40:00'), g('2026-10-11', 'L', '19:00:00')]
+    expect(run(day)).toBe(3)
+    expect(run([...day, g('2026-10-11', 'W', '19:30:00')])).toBe(0)
+    expect(lossStreak({ ...base, games: day }, '2026-10-11').today).toEqual({ w: 1, d: 0, l: 3 })
+  })
+  it('only counts games since the current player took over, even within the same day', () => {
+    const games = [g('2026-10-11', 'L', '18:00:00'), g('2026-10-11', 'L', '18:20:00'), g('2026-10-11', 'L', '18:40:00'), g('2026-10-11', 'L', '19:10:00')]
+    const s = { ...base, benches: ['2026-10-11T18:50:00'], games }
+    expect(lossStreak(s, '2026-10-11').streak).toBe(1) // b has only the 19:10 game
+    expect(controllerFor(s, '2026-10-11')?.id).toBe('b')
   })
 })
 

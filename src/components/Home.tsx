@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { addDays, controllerFor, lossStreak, matchesFrom, nextMember, parseDate, seasonOn, todayStr, type Match, type Result, type ScheduleState } from '../lib/rotation'
+import { controllerFor, lossStreak, matchesFrom, nextMember, nowStr, parseDate, seasonOn, todayStr, type Match, type Result, type ScheduleState } from '../lib/rotation'
 import PlayerCard from './PlayerCard'
-import { Avatar, Btn, Card, Icon, ICONS, Pill, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
+import { Avatar, Btn, Card, Icon, ICONS, Pill, ResultChip, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
 
@@ -10,12 +9,16 @@ const when = (d: string) => { const n = daysUntil(d); return n === 0 ? 'Today' :
 
 export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const today = todayStr()
-  const [logging, setLogging] = useState(false)
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   const active = state.members.filter((m) => m.active)
   const cur = controllerFor(state, today) ?? active[0] ?? null
   const next = cur ? nextMember(state, cur.id) : null
-  const { streak, recent } = lossStreak(state, today)
+  const { streak, recent, today: day, season: tot } = lossStreak(state, today)
+  const log = (result: Result) => {
+    navigator.vibrate?.(12)
+    onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: nowStr(), date: today, result }] })
+  }
+  const undo = () => onChange({ ...state, games: state.games.filter((g) => g.id !== state.games[state.games.length - 1]?.id) })
   const season = seasonOn(state, today)
   const upcoming = matchesFrom(state, today, 30).filter((m) => m.controller).slice(0, 5)
   const nextEvents = (state.events ?? []).filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2)
@@ -24,14 +27,6 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
   return (
     <div className="space-y-8">
       {!active.length && <Card className="p-6 text-mute">Add players in the Squad tab to start.</Card>}
-
-      {benched && (
-        <div className="rounded-2xl border border-loss/60 bg-loss/10 p-4">
-          <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
-          <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes the team now.</p>
-          <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Hand over to {next.name}</Btn>
-        </div>
-      )}
 
       {nextEvents.map((e) => (
         <div key={e.id} className="flex items-center gap-4 rounded-2xl border border-gold/50 bg-gold/10 p-4">
@@ -60,12 +55,30 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
               </div>
 
               {recent.length > 0 && (
-                <div className="mt-4 flex gap-1.5" aria-label="Recent results">{recent.map((g) => <ResultChip key={g.date} r={g.result} />)}</div>
+                <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Recent games">{recent.map((g) => <ResultChip key={g.id} r={g.result} size={28} />)}</div>
               )}
-
-              <Btn variant="primary" className="mt-5" onClick={guard(() => setLogging(true))}>Log result</Btn>
+              <p className="mt-3 text-sm text-mute">
+                Today <b className="text-ink">{day.w}W {day.d}D {day.l}L</b>
+                <span className="mx-2">·</span>Season <b className="text-ink">{tot.w}W {tot.d}D {tot.l}L</b>
+              </p>
             </div>
           </div>
+          <div className="mt-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Log a game</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button onClick={guard(() => log('W'))} className="min-h-16 rounded-xl bg-win/15 font-display text-2xl text-win active:scale-95">Win</button>
+              <button onClick={guard(() => log('D'))} className="min-h-16 rounded-xl bg-sand font-display text-2xl text-mute active:scale-95">Draw</button>
+              <button onClick={guard(() => log('L'))} className="min-h-16 rounded-xl bg-loss/15 font-display text-2xl text-loss active:scale-95">Loss</button>
+            </div>
+            <button onClick={guard(undo)} disabled={!state.games.length} className="mt-2 min-h-10 text-sm text-mute underline disabled:no-underline disabled:opacity-40">Undo last game</button>
+          </div>
+          {benched && (
+            <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
+              <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
+              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes the team now.</p>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, today] }))}>Hand over to {next.name}</Btn>
+            </div>
+          )}
           {next && (
             <div className="mt-6 flex items-center">
               <span className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Next up</span>
@@ -100,17 +113,16 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
         <section>
           <SectionTitle>Next games</SectionTitle>
           <Card className="divide-y divide-hair overflow-hidden">
-            {upcoming.map((m) => <Row key={m.date} m={m} result={state.results[m.date]} />)}
+            {upcoming.map((m) => <Row key={m.date} m={m} />)}
           </Card>
         </section>
       )}
 
-      {logging && <LogResult state={state} onChange={onChange} onClose={() => setLogging(false)} />}
     </div>
   )
 }
 
-function Row({ m, result }: { m: Match; result?: Result }) {
+function Row({ m }: { m: Match }) {
   return (
     <div className="flex items-center gap-4 px-5 py-4">
       <div className="w-12 shrink-0">
@@ -119,38 +131,7 @@ function Row({ m, result }: { m: Match; result?: Result }) {
       </div>
       {m.controller && <Avatar m={m.controller} size={40} />}
       <div className="min-w-0 flex-1"><p className="truncate font-medium">{m.controller?.name}</p><p className="text-sm text-mute">{fmtWeekday(m.date)}</p></div>
-      {result ? <ResultChip r={result} /> : <span className="shrink-0 text-sm text-mute">{when(m.date)}</span>}
+      <span className="shrink-0 text-sm text-mute">{when(m.date)}</span>
     </div>
-  )
-}
-
-function LogResult({ state, onChange, onClose }: { state: ScheduleState; onChange: (s: ScheduleState) => void; onClose: () => void }) {
-  const today = todayStr()
-  const days = matchesFrom(state, addDays(today, -21), 22).filter((m) => m.date <= today).reverse().slice(0, 5)
-  const firstOpen = days.find((m) => !state.results[m.date]) ?? days[0]
-  const [date, setDate] = useState(firstOpen?.date ?? today)
-  const save = (r: Result | null) => {
-    const results = { ...state.results }
-    if (r) results[date] = r; else delete results[date]
-    onChange({ ...state, results })
-    onClose()
-  }
-  return (
-    <Sheet title="Log result" onClose={onClose}>
-      {days.length === 0 ? <p className="text-mute">No games to log yet.</p> : (
-        <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Which game</p>
-          <div className="mb-5 flex flex-wrap gap-2">
-            {days.map((m) => (
-              <button key={m.date} onClick={() => setDate(m.date)} aria-pressed={date === m.date}
-                className={`flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium ${date === m.date ? 'border-accent bg-accent/15 text-ink' : 'border-hair hover:bg-sand'}`}>
-                {fmtShort(m.date)}{state.results[m.date] && <ResultChip r={state.results[m.date]} size={22} />}
-              </button>
-            ))}
-          </div>
-          <ResultButtons value={state.results[date]} onPick={save} onClear={() => save(null)} />
-        </>
-      )}
-    </Sheet>
   )
 }

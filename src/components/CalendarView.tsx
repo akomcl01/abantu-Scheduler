@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
-import { addDays, controllerFor, dow, fmtDate, parseDate, seasonOn, todayStr, type GameEvent, type ScheduleState } from '../lib/rotation'
-import { Avatar, Btn, Icon, ICONS, ResultButtons, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
+import { addDays, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
+import { Avatar, Btn, Icon, ICONS, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
-
-const resColor = { W: 'text-win', D: 'text-mute', L: 'text-loss' } as const
 
 export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const today = todayStr()
@@ -46,7 +44,8 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
             const w = dow(d)
             const match = inMonth && (w === 0 || w === 3)
             const c = match ? controllerFor(state, d) : null
-            const res = match ? state.results[d] : undefined
+            const t = tally(state.games.filter((g) => g.date === d))
+            const played = t.w + t.d + t.l > 0
             const ev = inMonth ? events.filter((e) => e.date === d) : []
             const clickable = match || ev.length > 0
             return (
@@ -54,7 +53,7 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
                 className={`relative flex h-14 flex-col items-center justify-start gap-1 rounded-2xl pt-1.5 transition sm:h-20 ${clickable ? 'hover:bg-sand' : ''} ${inMonth ? '' : 'opacity-30'}`}>
                 <span className={`grid size-7 place-items-center rounded-full text-sm ${d === today ? 'bg-ink font-semibold text-paper' : match ? 'font-semibold' : 'text-mute'}`}>{fmtDay(d)}</span>
                 {c && <Avatar m={c} size={22} />}
-                {res && <span className={`absolute left-1.5 top-1 text-[10px] font-bold ${resColor[res]}`}>{res}</span>}
+                {played && <span className={`absolute left-1 top-1 text-[10px] font-bold ${t.w > t.l ? 'text-win' : t.l > t.w ? 'text-loss' : 'text-mute'}`}>{t.w}-{t.l}</span>}
                 {ev.length > 0 && <span className="absolute right-1 top-1 text-gold" title={ev[0].title}><Icon d={ICONS.trophy} size={14} /></span>}
               </button>
             )
@@ -62,7 +61,7 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-hair px-2 pt-3 text-xs text-mute">
           <span>Wed + Sun games</span>
-          <span><b className="text-win">W</b> <b>D</b> <b className="text-loss">L</b> results</span>
+          <span>Small numbers: wins-losses that day</span>
           <span className="flex items-center gap-1 text-gold"><Icon d={ICONS.trophy} size={13} />Playoffs</span>
         </div>
       </div>
@@ -116,12 +115,9 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
   const season = seasonOn(state, date)
   const played = date <= todayStr()
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
-  const setResult = (r: 'W' | 'D' | 'L' | null) => {
-    const results = { ...state.results }
-    if (r) results[date] = r; else delete results[date]
-    onChange({ ...state, results })
-    onClose()
-  }
+  const dayGames = state.games.filter((g) => g.date === date).sort((a, b) => a.at.localeCompare(b.at))
+  const addGame = (result: Result) => onChange({ ...state, games: [...state.games, { id: crypto.randomUUID(), at: date === todayStr() ? nowStr() : `${date}T23:00:00`, date, result }] })
+  const removeGame = (id: string) => onChange({ ...state, games: state.games.filter((g) => g.id !== id) })
 
   return (
     <Sheet title={fmtLong(date)} onClose={onClose}>
@@ -137,9 +133,18 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
           <div className="mb-5 flex items-center gap-3 rounded-2xl bg-sand p-3">
             {c ? <><Avatar m={c} size={48} /><div><p className="text-xs text-mute">On the sticks{season ? ` · ${season.name}` : ''}</p><p className="text-lg font-semibold">{c.name}</p></div></> : <p className="px-1 text-mute">Before the rotation starts.</p>}
           </div>
-          {c && (played
-            ? <><p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Result</p><ResultButtons value={state.results[date]} onPick={(r) => (canEdit ? setResult(r) : onNeedUnlock())} onClear={guard(() => setResult(null))} /></>
-            : <p className="text-sm text-mute">You can log the result once the game is played.</p>)}
+          {c && (played ? (
+            <>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Games {dayGames.length > 0 && <span className="normal-case tracking-normal">· tap one to remove it</span>}</p>
+              {dayGames.length === 0 ? <p className="mb-4 text-sm text-mute">Nothing logged.</p> : (
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {dayGames.map((g) => <button key={g.id} aria-label={`Remove ${g.result}`} onClick={guard(() => removeGame(g.id))}><ResultChip r={g.result} size={32} /></button>)}
+                </div>
+              )}
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Add a game</p>
+              <ResultButtons onPick={(r) => (canEdit ? addGame(r) : onNeedUnlock())} />
+            </>
+          ) : <p className="text-sm text-mute">You can log games once they’re played.</p>)}
         </>
       )}
       {!canEdit && <p className="mt-4 text-sm text-mute">Unlock editing to change the schedule.</p>}

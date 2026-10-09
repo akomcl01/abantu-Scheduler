@@ -24,15 +24,16 @@ const seed = (): ScheduleState => ({
   startDate: todayStr(),
   seasons: [],
   benches: [],
-  results: {},
+  games: [],
   events: [],
 })
 
 /** Fill in fields that older saved data doesn't have. */
-const normalize = (raw: Partial<ScheduleState> | null | undefined): ScheduleState => {
+const normalize = (raw: (Partial<ScheduleState> & { results?: Record<string, 'W' | 'D' | 'L'> }) | null | undefined): ScheduleState => {
   const base = seed()
   const r = raw ?? {}
-  return { ...base, ...r, members: r.members ?? base.members, startDate: r.startDate ?? base.startDate, seasons: r.seasons ?? [], benches: r.benches ?? [], results: r.results ?? {}, events: r.events ?? [] }
+  const legacy = Object.entries(r.results ?? {}).map(([date, result]) => ({ id: crypto.randomUUID(), date, at: `${date}T12:00:00`, result }))
+  return { ...base, ...r, members: r.members ?? base.members, startDate: r.startDate ?? base.startDate, seasons: r.seasons ?? [], benches: r.benches ?? [], games: r.games ?? legacy, events: r.events ?? [] }
 }
 
 const readLocal = (): ScheduleState => {
