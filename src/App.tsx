@@ -34,11 +34,10 @@ export default function App() {
     <div className="mx-auto min-h-screen max-w-3xl px-4 sm:px-6">
       <header className="flex items-center gap-4 pt-5 sm:gap-8 sm:pt-7">
         <img src={`${import.meta.env.BASE_URL}crest.png`} alt="Abantu FC" className="size-11 shrink-0 rounded-lg bg-black object-cover" />
-        <p className="font-display text-xl leading-none sm:hidden">Abantu</p>
-        <div className="hidden sm:block"><Nav tab={tab} setTab={setTab} /></div>
+        <p className="font-display text-xl leading-none">Abantu</p>
       </header>
 
-      <main className="pb-32 pt-8 sm:pb-24 sm:pt-10">
+      <main className="pb-32 pt-8 sm:pt-10">
         {error && <p className="mb-4 rounded-xl border border-accent/40 bg-card p-3 text-sm text-accent">{error}</p>}
         {tab === 'home' && <Home state={state} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
@@ -46,7 +45,7 @@ export default function App() {
         {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} />}
       </main>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Nav tab={tab} setTab={setTab} mobile />
       </div>
 
