@@ -46,7 +46,7 @@ export default function App() {
         {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} />}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hair bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden">
         <Nav tab={tab} setTab={setTab} mobile />
       </div>
 
@@ -65,18 +65,17 @@ export default function App() {
 
 function Nav({ tab, setTab, mobile = false }: { tab: Tab; setTab: (t: Tab) => void; mobile?: boolean }) {
   return (
-    <nav aria-label="Main" className={mobile ? 'grid grid-cols-4' : 'flex gap-7'}>
+    <nav aria-label="Main" className={mobile ? 'pointer-events-auto flex gap-1 rounded-full border border-hair bg-card/90 p-1.5 shadow-[0_10px_34px_rgba(0,0,0,0.35)] backdrop-blur-xl' : 'flex gap-7'}>
       {tabs.map((t) => {
         const on = tab === t.id
         return (
-          <button key={t.id} onClick={() => setTab(t.id)} aria-current={on ? 'page' : undefined}
+          <button key={t.id} onClick={() => setTab(t.id)} aria-current={on ? 'page' : undefined} aria-label={t.label}
             className={mobile
-              ? `flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${on ? 'text-ink' : 'text-mute'}`
+              ? `flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition ${on ? 'bg-ink text-paper' : 'text-mute'}`
               : `relative min-h-11 text-[15px] font-semibold transition ${on ? 'text-ink' : 'text-mute hover:text-ink'}`}>
-            {mobile && <Icon d={t.icon} size={22} className={on ? 'text-accent' : ''} />}
-            {t.label}
+            {mobile && <Icon d={t.icon} size={21} />}
+            {(!mobile || on) && t.label}
             {on && !mobile && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-ink" />}
-            {on && mobile && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-accent" />}
           </button>
         )
       })}
