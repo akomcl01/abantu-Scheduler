@@ -33,7 +33,7 @@ export default function App() {
   return (
     <div className="mx-auto min-h-screen max-w-3xl px-4 sm:px-6">
       <header className="flex items-center gap-4 pt-5 sm:gap-8 sm:pt-7">
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-hair bg-card font-display text-2xl leading-none text-accent">A</span>
+        <img src={`${import.meta.env.BASE_URL}crest.png`} alt="Abantu FC" className="size-11 shrink-0 rounded-lg bg-black object-cover" />
         <p className="font-display text-xl leading-none sm:hidden">Abantu</p>
         <div className="hidden sm:block"><Nav tab={tab} setTab={setTab} /></div>
       </header>
