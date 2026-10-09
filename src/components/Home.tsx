@@ -1,6 +1,6 @@
 import { addDays, matchesFrom, parseDate, todayStr, type Match, type ScheduleState } from '../lib/rotation'
 import PlayerCard from './PlayerCard'
-import { Avatar, Card, Pill, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
+import { Avatar, Card, Icon, ICONS, Pill, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 const daysUntil = (d: string) => Math.round((parseDate(d).getTime() - parseDate(todayStr()).getTime()) / 86_400_000)
 const when = (d: string) => { const n = daysUntil(d); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days` }
@@ -13,11 +13,20 @@ export default function Home({ state }: { state: ScheduleState }) {
   const sundayLabel = hero ? when(hero.date) : ''
   const following = upcoming.find((m) => m.controller && m.controller.id !== hero?.controller?.id)
   const nights = hero ? (hero.kind === 'wednesday' ? `${fmtShort(hero.date)} + ${fmtShort(addDays(hero.date, 4))}` : fmtShort(hero.date)) : ''
+  const nextEvents = (state.events ?? []).filter((e) => e.date >= todayStr()).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2)
   const rotationIndex = Math.max(0, active.findIndex((m) => m.id === hero?.controller?.id))
 
   return (
     <div className="space-y-8">
       {!active.length && <Card className="p-6 text-mute">Add players in the Squad tab to start the rotation.</Card>}
+
+      {nextEvents.map((e) => (
+        <div key={e.id} className="flex items-center gap-4 rounded-2xl border border-gold/50 bg-gold/10 p-4">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold/20 text-gold"><Icon d={ICONS.trophy} size={22} /></span>
+          <div className="min-w-0 flex-1"><p className="truncate font-semibold">{e.title}</p><p className="text-sm text-mute">{fmtShort(e.date)}</p></div>
+          <Pill tone="gold">{when(e.date)}</Pill>
+        </div>
+      ))}
 
       {hero?.controller && (
         <section>

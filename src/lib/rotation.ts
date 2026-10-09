@@ -9,10 +9,17 @@ export interface Member {
   cardImage?: string // real FC card image (URL or /cards/x.png); falls back to /cards/<name>.png
 }
 
+export interface GameEvent {
+  id: string
+  date: string // YYYY-MM-DD
+  title: string // e.g. Clubs playoffs
+}
+
 export interface ScheduleState {
   members: Member[] // order = rotation order
   startDate: string // first Sunday of the rotation, YYYY-MM-DD
   skipped: string[] // Sundays with no turn (also cancels the Wednesday before it; doesn't consume a turn)
+  events?: GameEvent[] // playoffs and other one-off dates
   overrides: Record<string, string> // Sunday date -> member id (swap, covers that week's Wed + Sun, doesn't shift rotation)
 }
 
