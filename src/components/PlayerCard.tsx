@@ -18,13 +18,14 @@ interface Props { m: Member; compact?: boolean; className?: string; dim?: boolea
 
 export default function PlayerCard({ m, compact = false, className = '', dim = false }: Props) {
   const src = cardSrc(m)
-  const [failed, setFailed] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState<string | null>(null)
   const wrap = `${className} ${dim ? 'opacity-55 saturate-50' : ''}`
   const shadow = { filter: 'drop-shadow(0 12px 20px rgba(0,0,0,.55))' }
+  const hasName = m.name.trim().length > 0
 
-  // Real card from the game wins when a file exists.
-  if (m.name.trim() && failed !== src) {
-    return <div className={wrap} style={shadow}><img src={src} alt={m.name} className="block w-full" draggable={false} onError={() => setFailed(src)} /></div>
+  // Real card from the game wins once its file has loaded; until then (or if missing) draw one.
+  if (hasName && loaded === src) {
+    return <div className={wrap} style={shadow}><img src={src} alt={m.name} className="block w-full" draggable={false} /></div>
   }
 
   const rating = getRating(m)
@@ -36,6 +37,7 @@ export default function PlayerCard({ m, compact = false, className = '', dim = f
 
   return (
     <div className={wrap} style={{ containerType: 'inline-size', ...shadow }}>
+      {hasName && <img src={src} alt="" className="hidden" onLoad={() => setLoaded(src)} />}
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '100 / 143', borderRadius: cq(5), background: t.face, boxShadow: `inset 0 0 0 ${cq(1)} ${t.edge}` }}>
         {/* sheen */}
         <div className="absolute inset-0" style={{ background: holo ? 'conic-gradient(from 210deg at 70% 30%, rgba(255,120,180,.18), rgba(120,200,255,.2), rgba(150,255,200,.2), rgba(255,230,140,.18), rgba(255,120,180,.18))' : 'linear-gradient(115deg, transparent 32%, rgba(255,255,255,.38) 47%, transparent 60%)' }} />

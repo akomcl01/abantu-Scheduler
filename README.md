@@ -1,11 +1,11 @@
 # Abantu Scheduler
 
-A simple, responsive scheduler for our FIFA group. We play **Wednesdays** (group night) and **Sundays** (one person controls the whole team, rotating in a fixed loop).
+A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sundays**. One person controls the whole team for a **whole FC27 season**; the next player in the squad order takes over at the next season, or early if the current player loses **3 in a row**.
 
-- **Next up** – who's on the sticks this Sunday, and who follows
-- **Calendar** – month grid on desktop, agenda on mobile; tap a Sunday to swap or skip
+- **Next up** – who's on the sticks, their losses in a row (3 triggers a handover), and recent results
+- **Calendar** – who has each game, logged results, seasons and playoffs
 - **Squad** – character names, teams, and the rotation order
-- **Settings** – rotation start date, share link, editing PIN
+- **Settings** – first player's start date, seasons, look (FC / Classic), share link, editing PIN
 
 ## Player cards
 

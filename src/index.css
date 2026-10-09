@@ -9,6 +9,8 @@
   --color-sand: #22272C;
   --color-accent: #34E0A1;
   --color-gold: #E3B341;
+  --color-win: #34E0A1;
+  --color-loss: #FF6B6B;
   --color-on-accent: #04150E;
   --color-primary-from: #3B6BFF;
   --color-primary-to: #7C4DFF;
@@ -41,6 +43,8 @@ button { cursor: pointer; }
   --color-sand: #ECE5D6;
   --color-accent: #CC3F24;
   --color-gold: #9A6A12;
+  --color-win: #2E7D4F;
+  --color-loss: #C23B2A;
   --color-on-accent: #FFFFFF;
   --color-primary-from: #1D1B18;
   --color-primary-to: #1D1B18;

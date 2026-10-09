@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { useCallback, useEffect, useState } from 'react'
-import { nextOnOrAfter, todayStr, type ScheduleState } from './rotation'
+import { todayStr, type ScheduleState } from './rotation'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -20,21 +20,25 @@ export const newMember = (i: number, name = '') => ({
 })
 
 const seed = (): ScheduleState => ({
-  members: [
-    newMember(0, 'Player 1'),
-    newMember(1, 'Player 2'),
-    newMember(2, 'Player 3'),
-    newMember(3, 'Player 4'),
-  ],
-  startDate: nextOnOrAfter(todayStr(), 0),
-  skipped: [],
-  overrides: {},
+  members: [newMember(0, 'Player 1'), newMember(1, 'Player 2'), newMember(2, 'Player 3'), newMember(3, 'Player 4')],
+  startDate: todayStr(),
+  seasons: [],
+  benches: [],
+  results: {},
+  events: [],
 })
+
+/** Fill in fields that older saved data doesn't have. */
+const normalize = (raw: Partial<ScheduleState> | null | undefined): ScheduleState => {
+  const base = seed()
+  const r = raw ?? {}
+  return { ...base, ...r, members: r.members ?? base.members, startDate: r.startDate ?? base.startDate, seasons: r.seasons ?? [], benches: r.benches ?? [], results: r.results ?? {}, events: r.events ?? [] }
+}
 
 const readLocal = (): ScheduleState => {
   try {
     const raw = localStorage.getItem(LS)
-    if (raw) return JSON.parse(raw)
+    if (raw) return normalize(JSON.parse(raw))
   } catch { /* ignore */ }
   return seed()
 }
@@ -53,7 +57,7 @@ export function useSchedule() {
       const { data, error } = await sb.from('schedule_state').select('data').eq('id', 1).maybeSingle()
       if (!alive) return
       if (error) setError(error.message)
-      setState(data?.data ?? seed())
+      setState(normalize(data?.data))
     }
     load()
     const ch = sb.channel('schedule').on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_state' }, load).subscribe()

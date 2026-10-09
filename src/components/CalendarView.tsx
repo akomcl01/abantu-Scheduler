@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
-import { addDays, controllerFor, dow, fmtDate, parseDate, todayStr, type GameEvent, type ScheduleState } from '../lib/rotation'
-import { Avatar, Btn, Icon, ICONS, Pill, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
+import { addDays, controllerFor, dow, fmtDate, parseDate, seasonOn, todayStr, type GameEvent, type ScheduleState } from '../lib/rotation'
+import { Avatar, Btn, Icon, ICONS, ResultButtons, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
+
+const resColor = { W: 'text-win', D: 'text-mute', L: 'text-loss' } as const
 
 export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const today = todayStr()
@@ -10,10 +12,8 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
   const [selected, setSelected] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const events = state.events ?? []
-  const eventOn = (d: string) => events.filter((e) => e.date === d)
-  const monthEvents = events.filter((e) => e.date.startsWith(cursor)).sort((a, b) => a.date.localeCompare(b.date))
-  const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   const first = `${cursor}-01`
+  const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
 
   const cells = useMemo(() => {
     const start = addDays(first, -((dow(first) + 6) % 7)) // Monday-first
@@ -24,14 +24,13 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
     d.setUTCMonth(d.getUTCMonth() + n)
     setCursor(fmtDate(d).slice(0, 7))
   }
-  const sundays = cells.filter((d) => d.startsWith(cursor) && dow(d) === 0)
+  const monthEvents = events.filter((e) => e.date.startsWith(cursor)).sort((a, b) => a.date.localeCompare(b.date))
 
   return (
     <div className="space-y-8">
       <div className="flex items-end justify-between">
         <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl">{fmtMonth(first)} <span className="text-mute">{fmtYear(first)}</span></h1>
         <div className="flex gap-2">
-          <Btn onClick={guard(() => setAdding(true))} className="hidden sm:inline-flex"><Icon d={ICONS.trophy} size={18} />Playoffs</Btn>
           <Btn onClick={() => shift(-1)} aria-label="Previous month" className="!px-0 w-11"><Icon d={ICONS.left} /></Btn>
           <Btn onClick={() => shift(1)} aria-label="Next month" className="!px-0 w-11"><Icon d={ICONS.right} /></Btn>
         </div>
@@ -45,27 +44,49 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
           {cells.map((d) => {
             const inMonth = d.startsWith(cursor)
             const w = dow(d)
-            const c = (w === 0 || w === 3) && inMonth ? controllerFor(state, d) : null
             const match = inMonth && (w === 0 || w === 3)
-            const isToday = d === today
-            const ev = inMonth ? eventOn(d) : []
+            const c = match ? controllerFor(state, d) : null
+            const res = match ? state.results[d] : undefined
+            const ev = inMonth ? events.filter((e) => e.date === d) : []
             const clickable = match || ev.length > 0
             return (
               <button key={d} disabled={!clickable} onClick={() => setSelected(d)} aria-label={fmtLong(d)}
-                className={`flex h-14 flex-col items-center justify-start gap-1 relative rounded-2xl pt-1.5 transition sm:h-20 ${clickable ? 'hover:bg-sand' : ''} ${inMonth ? '' : 'opacity-30'}`}>
-                <span className={`grid size-7 place-items-center rounded-full text-sm ${isToday ? 'bg-ink font-semibold text-paper' : w === 0 || w === 3 ? 'font-semibold' : 'text-mute'}`}>{fmtDay(d)}</span>
+                className={`relative flex h-14 flex-col items-center justify-start gap-1 rounded-2xl pt-1.5 transition sm:h-20 ${clickable ? 'hover:bg-sand' : ''} ${inMonth ? '' : 'opacity-30'}`}>
+                <span className={`grid size-7 place-items-center rounded-full text-sm ${d === today ? 'bg-ink font-semibold text-paper' : match ? 'font-semibold' : 'text-mute'}`}>{fmtDay(d)}</span>
                 {c && <Avatar m={c} size={22} />}
+                {res && <span className={`absolute left-1.5 top-1 text-[10px] font-bold ${resColor[res]}`}>{res}</span>}
                 {ev.length > 0 && <span className="absolute right-1 top-1 text-gold" title={ev[0].title}><Icon d={ICONS.trophy} size={14} /></span>}
-                {inMonth && match && !c && state.skipped.includes(w === 3 ? addDays(d, 4) : d) && <span className="text-[10px] text-mute">off</span>}
               </button>
             )
           })}
         </div>
-        <div className="mt-3 flex items-center gap-4 border-t border-hair px-2 pt-3 text-xs text-mute">
-          <span>Wednesday and Sunday: same player both nights</span>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-hair px-2 pt-3 text-xs text-mute">
+          <span>Wed + Sun games</span>
+          <span><b className="text-win">W</b> <b>D</b> <b className="text-loss">L</b> results</span>
           <span className="flex items-center gap-1 text-gold"><Icon d={ICONS.trophy} size={13} />Playoffs</span>
         </div>
       </div>
+
+      <section>
+        <SectionTitle>Seasons</SectionTitle>
+        <div className="divide-y divide-hair overflow-hidden rounded-2xl border border-hair bg-card">
+          {state.seasons.length === 0 && <p className="px-5 py-4 text-sm text-mute">Add the season dates in Settings to see who plays each one.</p>}
+          {[...state.seasons].sort((a, b) => a.start.localeCompare(b.start)).map((s) => {
+            const c = controllerFor(state, s.start > state.startDate ? s.start : state.startDate)
+            const live = seasonOn(state, today)?.id === s.id
+            return (
+              <div key={s.id} className="flex items-center gap-4 px-5 py-4">
+                {c ? <Avatar m={c} size={40} ring={live} /> : <span className="size-10 rounded-full bg-sand" />}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{c?.name ?? 'Not started'}</p>
+                  <p className="text-sm text-mute">{s.name} · {fmtShort(s.start)} to {fmtShort(s.end)}</p>
+                </div>
+                {live && <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-on-accent">Now</span>}
+              </div>
+            )
+          })}
+        </div>
+      </section>
 
       <section>
         <SectionTitle aside={<button onClick={guard(() => setAdding(true))} className="flex min-h-9 items-center gap-1.5 text-xs font-semibold text-gold"><Icon d={ICONS.plus} size={14} />Add playoffs</button>}>Playoffs &amp; events</SectionTitle>
@@ -82,23 +103,6 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
         </div>
       </section>
 
-      <section>
-        <SectionTitle>Who’s up this month</SectionTitle>
-        <div className="divide-y divide-hair overflow-hidden rounded-2xl border border-hair bg-card">
-          {sundays.map((d) => {
-            const c = controllerFor(state, d)
-            return (
-              <button key={d} onClick={() => setSelected(d)} className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-sand/60">
-                <span className="w-8 font-display text-3xl leading-none">{fmtDay(d)}</span>
-                {c ? <><Avatar m={c} size={36} /><span className="flex-1 font-medium">{c.name}</span></> : <span className="flex-1 text-mute">{state.skipped.includes(d) ? 'No game' : 'Before rotation start'}</span>}
-                {state.overrides[d] && <Pill>Swapped</Pill>}
-                <Icon d={ICONS.right} size={18} className="text-mute" />
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
       {adding && <AddEvent onClose={() => setAdding(false)} onSave={(e) => { onChange({ ...state, events: [...events, e] }); setCursor(e.date.slice(0, 7)); setAdding(false) }} />}
       {selected && <DaySheet date={selected} state={state} canEdit={canEdit} onChange={onChange} onNeedUnlock={onNeedUnlock} onClose={() => setSelected(null)} />}
     </div>
@@ -108,11 +112,16 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
 function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Props & { date: string; onClose: () => void }) {
   const dayEvents = (state.events ?? []).filter((e) => e.date === date)
   const isMatch = dow(date) === 0 || dow(date) === 3
-  const key = dow(date) === 3 ? addDays(date, 4) : date // swaps/skips live on the Sunday and cover that week's Wed + Sun
-  const c = controllerFor(state, key)
-  const skipped = state.skipped.includes(key)
-  const set = (patch: Partial<ScheduleState>) => onChange({ ...state, ...patch })
+  const c = isMatch ? controllerFor(state, date) : null
+  const season = seasonOn(state, date)
+  const played = date <= todayStr()
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
+  const setResult = (r: 'W' | 'D' | 'L' | null) => {
+    const results = { ...state.results }
+    if (r) results[date] = r; else delete results[date]
+    onChange({ ...state, results })
+    onClose()
+  }
 
   return (
     <Sheet title={fmtLong(date)} onClose={onClose}>
@@ -123,31 +132,16 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
           <Btn variant="danger" onClick={guard(() => { onChange({ ...state, events: (state.events ?? []).filter((x) => x.id !== e.id) }); onClose() })}>Remove</Btn>
         </div>
       ))}
-      {isMatch && <>
-      <div className="mb-5 flex items-center gap-3 rounded-2xl bg-sand p-3">
-        {c ? <><Avatar m={c} size={48} /><div><p className="text-xs text-mute">On the sticks</p><p className="text-lg font-semibold">{c.name}</p></div></> : <p className="px-1 text-mute">{skipped ? 'No games this week.' : 'No one scheduled.'}</p>}
-      </div>
-      <p className="mb-4 text-sm text-mute">Changes apply to both nights that week ({fmtShort(addDays(key, -4))} + {fmtShort(key)}).</p>
-      {!skipped && (
+      {isMatch && (
         <>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Swap for this week</p>
-          <div className="mb-5 flex flex-wrap gap-2">
-            {state.members.filter((m) => m.active).map((m) => (
-              <button key={m.id} onClick={guard(() => { set({ overrides: { ...state.overrides, [key]: m.id } }); onClose() })}
-                className={`flex min-h-11 items-center gap-2 rounded-full border py-1 pl-1.5 pr-4 text-sm font-medium ${c?.id === m.id ? 'border-accent bg-accent/15 text-ink' : 'border-hair hover:bg-sand'}`}>
-                <Avatar m={m} size={28} />{m.name}
-              </button>
-            ))}
+          <div className="mb-5 flex items-center gap-3 rounded-2xl bg-sand p-3">
+            {c ? <><Avatar m={c} size={48} /><div><p className="text-xs text-mute">On the sticks{season ? ` · ${season.name}` : ''}</p><p className="text-lg font-semibold">{c.name}</p></div></> : <p className="px-1 text-mute">Before the rotation starts.</p>}
           </div>
+          {c && (played
+            ? <><p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Result</p><ResultButtons value={state.results[date]} onPick={(r) => (canEdit ? setResult(r) : onNeedUnlock())} onClear={guard(() => setResult(null))} /></>
+            : <p className="text-sm text-mute">You can log the result once the game is played.</p>)}
         </>
       )}
-      <div className="flex flex-wrap gap-2">
-        {state.overrides[key] && <Btn onClick={guard(() => { const o = { ...state.overrides }; delete o[key]; set({ overrides: o }); onClose() })}>Undo swap</Btn>}
-        <Btn onClick={guard(() => { set({ skipped: skipped ? state.skipped.filter((s) => s !== key) : [...state.skipped, key] }); onClose() })}>
-          {skipped ? 'Restore week' : 'Skip this week'}
-        </Btn>
-      </div>
-      </>}
       {!canEdit && <p className="mt-4 text-sm text-mute">Unlock editing to change the schedule.</p>}
     </Sheet>
   )

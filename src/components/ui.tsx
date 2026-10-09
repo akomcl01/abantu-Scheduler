@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from 'react'
 import type { Member } from '../lib/rotation'
-import { parseDate } from '../lib/rotation'
+import { parseDate, type Result } from '../lib/rotation'
 
 export const initials = (n: string) => n.trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?'
 
@@ -84,4 +84,24 @@ export const ICONS = {
   down: 'M6 10l6 6 6-6',
   plus: 'M12 5v14M5 12h14',
   trophy: 'M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 3M16 6h3a3 3 0 01-3 3M12 13v4M9 20h6M10 17h4',
+}
+
+const RES: Record<Result, string> = { W: 'bg-win/15 text-win', D: 'bg-sand text-mute', L: 'bg-loss/15 text-loss' }
+export const ResultChip = ({ r, size = 32 }: { r: Result; size?: number }) => (
+  <span className={`grid shrink-0 place-items-center rounded-lg text-xs font-bold ${RES[r]}`} style={{ width: size, height: size }}>{r}</span>
+)
+
+export function ResultButtons({ value, onPick, onClear }: { value?: Result; onPick: (r: Result) => void; onClear?: () => void }) {
+  const label: Record<Result, string> = { W: 'Win', D: 'Draw', L: 'Loss' }
+  return (
+    <div>
+      <div className="grid grid-cols-3 gap-2">
+        {(['W', 'D', 'L'] as const).map((r) => (
+          <button key={r} type="button" onClick={() => onPick(r)} aria-pressed={value === r}
+            className={`min-h-14 rounded-xl border text-sm font-bold transition ${value === r ? `${RES[r]} border-current` : 'border-hair bg-sand text-ink hover:bg-hair'}`}>{label[r]}</button>
+        ))}
+      </div>
+      {value && onClear && <button type="button" onClick={onClear} className="mt-3 min-h-10 text-sm text-mute underline">Clear result</button>}
+    </div>
+  )
 }

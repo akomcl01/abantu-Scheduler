@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { COLORS, newMember } from '../lib/store'
 import type { Member, ScheduleState } from '../lib/rotation'
-import { controllerFor, nextOnOrAfter, todayStr } from '../lib/rotation'
+import { controllerFor, nextMember, todayStr } from '../lib/rotation'
 import PlayerCard from './PlayerCard'
 import { getPosition, getRating, getStats, POSITIONS, STAT_LABELS } from '../lib/card'
 import { Btn, Card, Icon, ICONS, Pill, Sheet } from './ui'
@@ -10,7 +10,8 @@ interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: Schedule
 
 export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props) {
   const [editing, setEditing] = useState<Member | null>(null)
-  const upNext = controllerFor(state, nextOnOrAfter(todayStr(), 0))?.id
+  const nowId = (controllerFor(state, todayStr()) ?? state.members.find((m) => m.active))?.id
+  const nextId = nowId ? nextMember(state, nowId)?.id : undefined
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   const setMembers = (members: Member[]) => onChange({ ...state, members })
   const move = (i: number, d: number) => {
@@ -24,7 +25,7 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl">The squad</h1>
-          <p className="mt-2 text-mute">Sunday order, left to right. It loops.</p>
+          <p className="mt-2 text-mute">Order of play. Each player takes a whole season.</p>
         </div>
         <Btn variant="primary" onClick={guard(() => setEditing(newMember(state.members.length)))}><Icon d={ICONS.plus} size={18} />Add</Btn>
       </div>
@@ -38,7 +39,7 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
             <div className="flex items-center gap-1">
               <button aria-label={`Move ${m.name} earlier`} disabled={i === 0} onClick={guard(() => move(i, -1))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand disabled:opacity-20"><Icon d={ICONS.left} /></button>
               <span className="min-w-14 text-center">
-                {m.id === upNext ? <Pill tone="gold">Up next</Pill> : <span className="font-display text-2xl leading-none text-mute">{i + 1}</span>}
+                {m.id === nowId ? <Pill tone="accent">Playing</Pill> : m.id === nextId ? <Pill tone="gold">Next</Pill> : <span className="font-display text-2xl leading-none text-mute">{i + 1}</span>}
               </span>
               <button aria-label={`Move ${m.name} later`} disabled={i === state.members.length - 1} onClick={guard(() => move(i, 1))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand disabled:opacity-20"><Icon d={ICONS.right} /></button>
             </div>
