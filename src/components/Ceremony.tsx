@@ -82,6 +82,34 @@ function Farewell({ f, out, stats, onNext }: { f: ReturnType<typeof farewell>; o
   )
 }
 
+/** Rubber-stamp seal: ring text around our crest, one ink, slightly rough edges. */
+function Stamp() {
+  const ink = '#8f1713'
+  return (
+    <svg viewBox="0 0 200 200" role="img" aria-label="Signed, FC Club Abantu" className="stamp-in pointer-events-none absolute -right-2 -top-24 size-28 rotate-[-12deg]" style={{ mixBlendMode: 'multiply', opacity: 0.95 }}>
+      <defs>
+        <path id="stamp-ring" d="M100,100 m-73,0 a73,73 0 1,1 146,0 a73,73 0 1,1 -146,0" />
+        <filter id="stamp-rough" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" result="warp" />
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="3.2" result="wobbly" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="3" result="grain" />
+          <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -3 3.1" result="speck" />
+          <feComposite in="wobbly" in2="speck" operator="in" />
+        </filter>
+      </defs>
+      <g filter="url(#stamp-rough)" fill="none" stroke={ink}>
+        <circle cx="100" cy="100" r="94" strokeWidth="5" />
+        <circle cx="100" cy="100" r="87" strokeWidth="1.5" />
+        <circle cx="100" cy="100" r="58" strokeWidth="2" />
+        <text fill={ink} stroke="none" fontFamily="Barlow Condensed, sans-serif" fontWeight="800" fontSize="19" letterSpacing="1.5">
+          <textPath href="#stamp-ring" textLength="455" lengthAdjust="spacing">SIGNED · FC CLUB ABANTU · EST. 2018 ·</textPath>
+        </text>
+        <image href={`${import.meta.env.BASE_URL}stamp-crest.png`} x="46" y="44" width="108" height="108" preserveAspectRatio="xMidYMid meet" />
+      </g>
+    </svg>
+  )
+}
+
 function Welcome({ w, inn, season, from, end, onNext }: { w: ReturnType<typeof welcome>; inn: Member; season?: string; from: string; end?: string; onNext: () => void }) {
   const tiles = [['Season', season ?? 'Open'], ['Starts', fmtShort(from)], ['Ends', end ? fmtShort(end) : '–']] as const
   return (
@@ -108,7 +136,7 @@ function Contract({ w, coach, signed, onSign, onClose }: { w: ReturnType<typeof 
   return (
     <>
       <div className="rise-in relative rotate-[-0.6deg] rounded-sm p-3 sm:p-4" style={{ color: ink, background: '#F7F1E1', backgroundImage: 'repeating-linear-gradient(0deg, rgba(120,90,40,.04) 0 2px, transparent 2px 5px), radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.7), transparent 60%)', boxShadow: '0 30px 60px rgba(0,0,0,.45), inset 0 0 0 1px #d9cca9' }}>
-        <div className="relative overflow-hidden border-[3px] border-double p-5" style={{ borderColor: 'rgba(160,130,70,.65)' }}>
+        <div className="relative border-[3px] border-double p-5" style={{ borderColor: 'rgba(160,130,70,.65)' }}>
           <img src={`${import.meta.env.BASE_URL}crest.png`} alt="" className="pointer-events-none absolute left-1/2 top-1/2 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.1] grayscale" style={{ maskImage: 'radial-gradient(circle, #000 38%, transparent 66%)', WebkitMaskImage: 'radial-gradient(circle, #000 38%, transparent 66%)' }} />
           <div className="relative">
             <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: '#8a6d2f' }}>{w.kicker}</p>
@@ -129,7 +157,7 @@ function Contract({ w, coach, signed, onSign, onClose }: { w: ReturnType<typeof 
               <div className="relative">
                 <p className={`h-10 truncate text-3xl leading-none ${signed ? 'sign-reveal' : 'invisible'}`} style={{ fontFamily: 'Caveat, cursive', fontWeight: 600, color: '#27408b' }}>{coach.name}</p>
                 <div className="border-t" style={{ borderColor: ink }} /><p className="mt-1 text-[11px] uppercase tracking-wider" style={{ color: '#7a6a4c' }}>{w.coachLine}</p>
-                {signed && <span className="stamp-in absolute -right-5 -top-12 grid size-[4.5rem] rotate-[-14deg] place-items-center rounded-full border-[3px] text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider" style={{ borderColor: '#b3261e', color: '#b3261e' }}>Signed<br />{w.club}</span>}
+                {signed && <Stamp />}
               </div>
             </div>
           </div>
