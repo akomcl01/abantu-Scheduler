@@ -70,7 +70,7 @@ export default function PlayerCard({ m, compact = false, className = '', dim = f
 
         {/* name band */}
         <div className="absolute inset-x-0 bottom-0 flex items-center" style={{ height: cq(compact ? 24 : 27), padding: `0 ${cq(5)}`, gap: cq(4), background: 'linear-gradient(180deg, rgba(14,16,19,.82), rgba(14,16,19,.96))', ...font }}>
-          <img src={`${import.meta.env.BASE_URL}crest.png`} alt="" className="shrink-0 rounded-full bg-black object-cover" style={{ width: cq(compact ? 14 : 16), height: cq(compact ? 14 : 16) }} />
+          <img src={`${import.meta.env.BASE_URL}crest.png`} alt="" className="shrink-0 rounded-full bg-[#234877] object-cover" style={{ width: cq(compact ? 14 : 16), height: cq(compact ? 14 : 16) }} />
           <span className="min-w-0 text-white">
             <span className="block truncate font-extrabold uppercase italic leading-none" style={{ fontSize: cq(compact ? 11.5 : 12.5) }}>{m.name || 'Player'}</span>
             {!compact && <span className="mt-[1cqw] block truncate font-semibold uppercase leading-none tracking-wider text-white/55" style={{ fontSize: cq(4.4) }}>Abantu · {getPosition(m)}</span>}
