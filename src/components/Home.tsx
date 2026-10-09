@@ -2,6 +2,7 @@ import { compOf, controllerFor, lossStreak, matchesFrom, nextMember, nowStr, par
 import { useState } from 'react'
 import PlayerCard from './PlayerCard'
 import Records from './Records'
+import WeekStrip from './WeekStrip'
 import { Avatar, Btn, Card, Icon, ICONS, Pill, ResultChip, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -30,6 +31,8 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
 
   return (
     <div className="space-y-8">
+      <WeekStrip state={state} />
+
       {!active.length && <Card className="p-6 text-mute">Add players in the Squad tab to start.</Card>}
 
       {nextEvents.map((e) => (
