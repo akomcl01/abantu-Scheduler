@@ -6,7 +6,7 @@ export interface Member {
   position?: string // card position, e.g. ST
   rating?: number // card overall
   stats?: number[] // PAC SHO PAS DRI DEF PHY
-  cardImage?: string // real FC card image (URL or /cards/x.png); falls back to /cards/<name>.png
+  cardImage?: string // player picture shown inside the card (data URL or /cards/x.png); falls back to /cards/<name>.png
 }
 
 export interface GameEvent {

@@ -1,1 +1,1 @@
-Drop each player's FC card image here, named after the character, lowercase with dashes (e.g. kwame.png, big-mike.png).
+Optional fallback: drop a player's picture here, named after the character, lowercase with dashes (e.g. kwame.png, big-mike.png). It is shown inside the card. Uploading from the player editor is easier. Cut-out PNGs (transparent background) look best.

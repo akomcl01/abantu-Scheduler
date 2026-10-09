@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { compressImage } from '../lib/image'
 import { COLORS, newMember } from '../lib/store'
 import type { Member, ScheduleState } from '../lib/rotation'
 import { controllerFor, nextMember, todayStr } from '../lib/rotation'
@@ -69,6 +70,13 @@ const field = 'mt-2 min-h-12 w-full rounded-2xl border border-hair bg-paper px-4
 
 function EditSheet({ member, isNew, onSave, onDelete, onClose }: { member: Member; isNew: boolean; onSave: (m: Member) => void; onDelete: () => void; onClose: () => void }) {
   const [m, setM] = useState<Member>({ ...member, position: getPosition(member), stats: getStats(member), rating: getRating(member) })
+  const file = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const onFile = async (f?: File) => {
+    if (!f) return
+    setBusy(true)
+    try { const url = await compressImage(f, 900, 0.85, true); setM((x) => ({ ...x, cardImage: url })) } finally { setBusy(false); if (file.current) file.current.value = '' }
+  }
   const setStat = (i: number, v: string) => setM({ ...m, stats: m.stats!.map((x, j) => (j === i ? Math.min(99, Math.max(1, Number(v) || 1)) : x)) })
   return (
     <Sheet title={isNew ? 'Add player' : 'Edit player'} onClose={onClose}>
@@ -77,9 +85,15 @@ function EditSheet({ member, isNew, onSave, onDelete, onClose }: { member: Membe
         <label className="block text-sm font-medium">Character name
           <input autoFocus className={field} value={m.name} onChange={(e) => setM({ ...m, name: e.target.value })} placeholder="e.g. Kwame" />
         </label>
-        <label className="block text-sm font-medium">Card image
-          <input className={field} value={m.cardImage ?? ''} onChange={(e) => setM({ ...m, cardImage: e.target.value })} placeholder="Optional. Defaults to /cards/<name>.png" />
-        </label>
+        <div>
+          <p className="text-sm font-medium">Player picture</p>
+          <p className="mt-1 text-xs text-mute">Goes inside the card. A cut-out PNG of your Clubs player (no background) looks best.</p>
+          <input ref={file} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+          <div className="mt-2 flex gap-2">
+            <Btn type="button" className="flex-1" disabled={busy} onClick={() => file.current?.click()}>{busy ? 'Uploading…' : m.cardImage ? 'Replace image' : 'Upload image'}</Btn>
+            {m.cardImage && <Btn type="button" onClick={() => setM({ ...m, cardImage: undefined })}>Remove</Btn>}
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm font-medium">Position
             <select className={field} value={m.position} onChange={(e) => setM({ ...m, position: e.target.value })}>{POSITIONS.map((p) => <option key={p}>{p}</option>)}</select>
