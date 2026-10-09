@@ -46,8 +46,8 @@ function Screens({ info, onClose }: { info: NonNullable<ReturnType<typeof latest
     return () => { document.body.style.overflow = prev }
   }, [])
 
-  const f = farewell({ out: info.out.name, inn: info.inn.name, games: info.count, ...info.games, reason: info.reason, season: info.season?.name })
-  const w = welcome({ name: info.inn.name, out: info.out.name, season: info.season?.name, term: info.season ? `${fmtShort(info.from)} to ${fmtShort(info.season.end)}` : 'until further notice', contractNo: info.no })
+  const f = farewell({ seed: info.key, out: info.out.name, inn: info.inn.name, games: info.count, ...info.games, reason: info.reason, season: info.season?.name })
+  const w = welcome({ seed: info.key, name: info.inn.name, out: info.out.name, season: info.season?.name, term: info.season ? `${fmtShort(info.from)} to ${fmtShort(info.season.end)}` : 'until further notice', contractNo: info.no })
 
   return (
     <div className="fixed inset-0 z-[60] overflow-y-auto bg-paper" role="dialog" aria-modal aria-label="Handover">
@@ -88,9 +88,9 @@ function Contract({ w, coach, signed, onSign, onClose }: { w: ReturnType<typeof 
         <div className="relative overflow-hidden border-[3px] border-double p-5" style={{ borderColor: 'rgba(160,130,70,.65)' }}>
           <img src={`${import.meta.env.BASE_URL}crest.png`} alt="" className="pointer-events-none absolute left-1/2 top-1/2 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.1] grayscale" style={{ maskImage: 'radial-gradient(circle, #000 38%, transparent 66%)', WebkitMaskImage: 'radial-gradient(circle, #000 38%, transparent 66%)' }} />
           <div className="relative">
-            <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: '#8a6d2f' }}>Abantu Football Club</p>
+            <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: '#8a6d2f' }}>{w.kicker}</p>
             <h1 className="mt-2 text-center text-[2.6rem] leading-none" style={{ fontFamily: 'Instrument Serif, Georgia, serif' }}>{w.title}</h1>
-            <p className="mt-2 text-center text-xs" style={{ fontFamily: 'Special Elite, monospace', color: '#7a6a4c' }}>No. {String(w.contractNo).padStart(3, '0')}</p>
+            <p className="mt-2 text-center text-xs" style={{ fontFamily: 'Special Elite, monospace', color: '#7a6a4c' }}>{w.club} · No. {String(w.contractNo).padStart(3, '0')}</p>
 
             <p className="mt-5 text-[13px] leading-relaxed" style={{ fontFamily: 'Special Elite, monospace' }}>{w.intro}</p>
             <ol className="mt-4 space-y-3 text-[13px] leading-relaxed" style={{ fontFamily: 'Special Elite, monospace' }}>
@@ -106,7 +106,7 @@ function Contract({ w, coach, signed, onSign, onClose }: { w: ReturnType<typeof 
               <div className="relative">
                 <p className={`h-10 truncate text-3xl leading-none ${signed ? 'sign-reveal' : 'invisible'}`} style={{ fontFamily: 'Caveat, cursive', fontWeight: 600, color: '#27408b' }}>{coach.name}</p>
                 <div className="border-t" style={{ borderColor: ink }} /><p className="mt-1 text-[11px] uppercase tracking-wider" style={{ color: '#7a6a4c' }}>{w.coachLine}</p>
-                {signed && <span className="stamp-in absolute -right-5 -top-12 grid size-[4.5rem] rotate-[-14deg] place-items-center rounded-full border-[3px] text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider" style={{ borderColor: '#b3261e', color: '#b3261e' }}>Signed<br />Abantu FC</span>}
+                {signed && <span className="stamp-in absolute -right-5 -top-12 grid size-[4.5rem] rotate-[-14deg] place-items-center rounded-full border-[3px] text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider" style={{ borderColor: '#b3261e', color: '#b3261e' }}>Signed<br />{w.club}</span>}
               </div>
             </div>
           </div>
