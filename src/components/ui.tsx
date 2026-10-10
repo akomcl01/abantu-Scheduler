@@ -83,6 +83,9 @@ export const ICONS = {
   up: 'M6 14l6-6 6 6',
   down: 'M6 10l6 6 6-6',
   plus: 'M12 5v14M5 12h14',
+  upvote: 'M12 4l8 9h-5v7H9v-7H4z',
+  play: 'M8 5l11 7-11 7z',
+  chat: 'M5 5h14v11h-8l-4 4v-4H5z',
   trophy: 'M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 3M16 6h3a3 3 0 01-3 3M12 13v4M9 20h6M10 17h4',
 }
 

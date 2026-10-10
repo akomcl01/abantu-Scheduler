@@ -2,19 +2,19 @@
 
 A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sundays**. One person — the **Coach** — controls the whole team for a **whole FC27 season**; the next player in the squad order takes over at the next season, or early if the current player loses **3 in a row**.
 
-- **Next up** – who's on the sticks, their losses in a row (3 triggers a handover), and recent results
+- **Home** – the week, who's on the sticks (and who was before and who's next), their losses in a row (3 triggers a handover popup), one-tap game logging, next games
 - **Calendar** – who has each game, logged results, seasons and playoffs
-- **Squad** – character names, teams, and the rotation order
-- **Goals** – goal of the week: players upload a clip, everyone votes, the winner is announced on Sunday
-- **Settings** – first player's start date, seasons, look (FC / Classic), share link, editing PIN
+- **Squad** – players, their card pictures, and the rotation order
+- **Goals** – goal of the week: players upload a clip, everyone votes, the winner is announced every Sunday (with a countdown)
+- **Settings** – first player's start date, seasons, handovers, look (FC / Classic), share link, editing PIN
 
 ## Records
 
-Results are split into **League** and **Playoffs** (toggle above the Win / Draw / Loss buttons). Each record card also takes an optional screenshot of the in-game record, so it works even if you don't log every game.
+Results are split into **League** and **Playoffs** (toggle above the Win / Draw / Loss buttons). The record cards (with an optional screenshot of the in-game record) are built but not shown on any screen at the moment.
 
 ## Player cards
 
-Each player gets an FC-style card. To use the real card from the game, save a screenshot/PNG as `public/cards/<name>.png` (lowercase, dashes for spaces, e.g. `big-mike.png`). Without a file the app draws a card from the position, overall and stats set in the Squad tab.
+Each player gets an FC-style card. To use the real card from the game, save a screenshot/PNG as `public/cards/<name>.png` (lowercase, dashes for spaces, e.g. `big-mike.png`). The card is only a frame for that picture. You can also upload or paste it in Squad → Edit card; it is saved to the database.
 
 ## Run
 
@@ -39,7 +39,7 @@ Without config the app runs in **local mode** (saved on this device only). To ma
 
 Everyone can read the schedule. Only someone who knows the PIN can change it. Games are stored one document each, so two people logging at the same time never overwrite each other. Record screenshots are stored in Firestore (compressed), not Cloud Storage, so no paid plan is needed.
 
-To publish the site: `npm run build`, then `npx firebase-tools deploy --only hosting` (set your project with `npx firebase-tools use <project-id>` first).
+The site is hosted on **Vercel**: `vercel deploy --prod --scope <your-team>` (set the same `VITE_FIREBASE_*` values as Vercel environment variables first, since Vite bakes them in at build time). Publish rule changes with `npx firebase-tools deploy --only firestore:rules --project <project-id>`.
 
 ## Goal of the week (Vercel Blob)
 
@@ -49,6 +49,13 @@ Videos upload from the phone to Vercel Blob through `api/upload.ts`. One-time se
 2. Publish the new `clips` and `votes` rules in `firestore.rules` (step 6 above).
 3. Redeploy. For local testing use `vercel env pull .env.local` and `npx vercel dev` (plain `npm run dev` has no `/api`, so uploads fail there; everything else works).
 
-Players pick their name in the Goals tab (no PIN). Weeks run Monday to Sunday; voting is open Monday to Saturday and the winner is announced on Sunday.
+Players don't use the PIN. Their names are protected by personal codes:
+
+1. Firebase console > **Authentication > Sign-in method** > turn on **Anonymous**.
+2. Publish `firestore.rules` (it adds `codes`, `claims`, `clips`, `votes`, `comments`).
+3. In the app: Settings > **Player codes** (unlock editing first) > **Make codes**. Send each player their own code privately.
+4. Each player opens Goals > **Who are you?**, picks their name and enters their code once. A new code (the **New** button) signs that player's old phone out.
+
+ It kicks off on the Sunday set by `GOALS_START` in `src/lib/goals.ts` (11 Oct 2026). Weeks run Sunday to Sunday: voting is open all week, and the next Sunday the winner is announced and a new week opens.
 
 Stack: Vite, React, TypeScript, Tailwind CSS v4, Firebase (Firestore + Auth), Vercel Blob.

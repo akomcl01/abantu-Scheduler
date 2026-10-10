@@ -17,13 +17,36 @@ service cloud.firestore {
       allow create, update: if isEditor() && request.resource.data.result in ['W', 'D', 'L'];
       allow delete: if isEditor();
     }
-    // Goal of the week: players have no PIN, so anyone can add a well-formed clip or vote (honor system).
-    // One clip per player per week and one vote per player per week, enforced by the document id. Only the editor can delete.
+    // Goal of the week. Players don't use the PIN. Each player has a personal code (codes/, editor only). Entering it
+    // on a phone creates a claim (claims/{player}) tying that player's name to the phone's anonymous sign-in. Clips,
+    // votes and comments are only accepted when written by the phone that holds that player's claim, so switching
+    // names needs the other player's code. One clip and one vote per player per week come from the document id.
+    function claimedBy(playerId) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/claims/$(playerId)).data.uid == request.auth.uid;
+    }
+
+    // Only the editor can see or change codes. A new code also deletes the claim, which signs the old phone out.
+    match /codes/{id} {
+      allow read, write: if isEditor();
+    }
+    // A claim stores the code used, so it is only readable by the phone that owns it and by the editor.
+    match /claims/{id} {
+      allow get: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow read, delete: if isEditor();
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['playerId', 'uid', 'code'])
+        && request.resource.data.playerId == id
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.code == get(/databases/$(database)/documents/codes/$(id)).data.code;
+    }
+
     match /clips/{id} {
       allow read: if true;
       allow create, update: if request.resource.data.keys().hasOnly(['id', 'week', 'playerId', 'title', 'url', 'at'])
         && request.resource.data.id == id
         && id == request.resource.data.week + '__' + request.resource.data.playerId
+        && claimedBy(request.resource.data.playerId)
         && request.resource.data.title is string && request.resource.data.title.size() <= 80
         && request.resource.data.url is string
         && request.resource.data.url.matches('https://[a-z0-9]+\\.public\\.blob\\.vercel-storage\\.com/goals/.+');
@@ -34,8 +57,18 @@ service cloud.firestore {
       allow create, update: if request.resource.data.keys().hasOnly(['id', 'week', 'voterId', 'clipId'])
         && request.resource.data.id == id
         && id == request.resource.data.week + '__' + request.resource.data.voterId
+        && claimedBy(request.resource.data.voterId)
         && request.resource.data.clipId is string
         && request.resource.data.clipId != id;
+      allow delete: if isEditor();
+    }
+    match /comments/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['id', 'clipId', 'authorId', 'text', 'at'])
+        && request.resource.data.id == id
+        && claimedBy(request.resource.data.authorId)
+        && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 280
+        && request.resource.data.clipId is string;
       allow delete: if isEditor();
     }
     match /pics/{id} {

@@ -1,12 +1,13 @@
 import { addDays, dow } from './rotation'
 
 /**
- * Goal of the week. A week runs Monday to Sunday. Uploads and votes are open Monday to Saturday; on Sunday
- * (the 2nd game day) they close and the winner is announced. Pure helpers, unit tested.
+ * Goal of the week. A week runs from one Sunday (the 2nd game day) to the next. Uploads and votes are open all
+ * week; the following Sunday the winner is announced and a new week opens. It officially starts on GOALS_START.
+ * Pure helpers, unit tested.
  */
 export interface Clip {
   id: string // clipId(week, playerId): one clip per player per week
-  week: string // the Monday of the week, YYYY-MM-DD
+  week: string // the Sunday the week opens, YYYY-MM-DD
   playerId: string
   title: string
   url: string
@@ -20,16 +21,41 @@ export interface Vote {
   clipId: string
 }
 
+export interface Comment {
+  id: string
+  clipId: string
+  authorId: string
+  text: string
+  at: string // local time, for ordering
+}
+
+/** The Sunday goal of the week officially kicks off. Before it, the Goals tab shows a countdown. */
+export const GOALS_START = '2026-10-11'
+
 export const MAX_CLIP_MB = 100
 export const MAX_TITLE = 80
+export const MAX_COMMENT = 280
 
 export const clipId = (week: string, playerId: string) => `${week}__${playerId}`
 export const voteId = clipId
 
-export const weekStart = (date: string) => addDays(date, -((dow(date) + 6) % 7))
-/** Sunday of that week: voting is over and the winner is shown. */
-export const announceDay = (week: string) => addDays(week, 6)
+export const hasStarted = (today: string) => today >= GOALS_START
+/** The Sunday a week opens. */
+export const weekStart = (date: string) => addDays(date, -dow(date))
+/** The next Sunday: voting for the week is over and the winner is shown. */
+export const announceDay = (week: string) => addDays(week, 7)
 export const isClosed = (week: string, today: string) => today >= announceDay(week)
+/** What the countdown counts down to: the kickoff, then each week's announcement. */
+export const nextDrop = (today: string) => (hasStarted(today) ? announceDay(weekStart(today)) : GOALS_START)
+
+/** Local midnight at the start of a YYYY-MM-DD day, in ms. */
+export const startOfDay = (date: string) => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d).getTime() }
+
+/** Split a time left (ms) into days, hours, minutes and seconds. Never negative. `done` only once the time has really run out, not in the last second. */
+export function countdown(ms: number) {
+  const t = Math.max(0, Math.floor(ms / 1000))
+  return { d: Math.floor(t / 86400), h: Math.floor((t % 86400) / 3600), m: Math.floor((t % 3600) / 60), s: t % 60, done: ms <= 0 }
+}
 
 export interface Ranked { clip: Clip; votes: number }
 
@@ -70,3 +96,6 @@ export function voteBlock(clip: Clip, voterId: string, today: string): string | 
   if (clip.playerId === voterId) return 'Your own clip'
   return null
 }
+
+/** Comments on one clip, oldest first. */
+export const commentsFor = (comments: Comment[], clip: string) => comments.filter((c) => c.clipId === clip).sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id))

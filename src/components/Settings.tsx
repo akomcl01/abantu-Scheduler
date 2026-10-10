@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { isShared } from '../lib/store'
 import { buildStints, coachesDuring, todayStr, type ScheduleState } from '../lib/rotation'
+import PlayerCodes from './PlayerCodes'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void; onReplay?: () => void }
@@ -50,6 +51,8 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
           </Row>
         )}
       </Card>
+
+      {isShared && <PlayerCodes members={state.members} canEdit={canEdit} onNeedUnlock={onNeedUnlock} />}
 
       <section>
         <SectionTitle aside={<button onClick={guard(() => setAddingSeason(true))} className="flex min-h-9 items-center gap-1.5 text-xs font-semibold text-gold"><Icon d={ICONS.plus} size={14} />Add season</button>}>Seasons</SectionTitle>
