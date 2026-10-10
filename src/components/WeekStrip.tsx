@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addDays, compOf, controllerFor, dow, seasonOn, tally, todayStr, type ScheduleState } from '../lib/rotation'
+import { addDays, compOf, controllerFor, dow, playoffsOn, seasonOn, tally, todayStr, type ScheduleState } from '../lib/rotation'
 import { Avatar, Icon, ICONS, ResultChip, fmtDay, fmtLong, fmtShort } from './ui'
 
 const monday = (d: string) => addDays(d, -((dow(d) + 6) % 7))
@@ -48,7 +48,7 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
           const played = state.games.some((g) => g.date === d)
           return (
             <button key={d} onClick={() => setSel(d)} aria-pressed={on} aria-label={fmtLong(d)}
-              className={`relative flex min-h-[4.5rem] flex-col items-center justify-between rounded-2xl border px-1 pb-2 pt-2.5 transition ${on ? 'border-transparent bg-ink text-paper' : d === today ? 'border-accent/70 bg-card' : 'border-hair bg-card'} ${d < today && !on ? 'opacity-70' : ''}`}>
+              className={`relative flex min-h-[4.5rem] flex-col items-center justify-between rounded-2xl border px-1 pb-2 pt-2.5 transition ${on ? 'border-transparent bg-ink text-paper' : d === today ? 'border-accent/70 bg-card' : playoffsOn(state, d) ? 'border-gold/40 bg-gold/10' : 'border-hair bg-card'} ${d < today && !on ? 'opacity-70' : ''}`}>
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${on ? 'text-paper/70' : 'text-mute'}`}>{DAYS[i]}</span>
               <span className="font-display text-xl leading-none">{fmtDay(d)}</span>
               <span className="flex h-6 items-center justify-center">

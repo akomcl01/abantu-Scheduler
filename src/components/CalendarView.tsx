@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { addDays, coachesDuring, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
+import { addDays, coachesDuring, controllerFor, playoffsOn, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Icon, ICONS, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -48,9 +48,12 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
             const played = t.w + t.d + t.l > 0
             const ev = inMonth ? events.filter((e) => e.date === d) : []
             const clickable = match || ev.length > 0
+            const inPo = inMonth && !!playoffsOn(state, d)
+            const poStart = inPo && (w === 1 || !playoffsOn(state, addDays(d, -1)))
+            const poEnd = inPo && (w === 0 || !playoffsOn(state, addDays(d, 1)))
             return (
               <button key={d} disabled={!clickable} onClick={() => setSelected(d)} aria-label={fmtLong(d)}
-                className={`relative flex h-14 flex-col items-center justify-start gap-1 rounded-2xl pt-1.5 transition sm:h-20 ${clickable ? 'hover:bg-sand' : ''} ${inMonth ? '' : 'opacity-30'}`}>
+                className={`relative flex h-14 flex-col items-center justify-start gap-1 rounded-2xl pt-1.5 transition sm:h-20 ${clickable ? 'hover:bg-sand' : ''} ${inMonth ? '' : 'opacity-30'} ${inPo ? `bg-gold/15 ${poStart ? 'rounded-l-2xl' : 'rounded-l-none'} ${poEnd ? 'rounded-r-2xl' : 'rounded-r-none'}` : ''}`}>
                 <span className={`grid size-7 place-items-center rounded-full text-sm ${d === today ? 'bg-ink font-semibold text-paper' : match ? 'font-semibold' : 'text-mute'}`}>{fmtDay(d)}</span>
                 {c && <Avatar m={c} size={22} />}
                 {played && <span className={`absolute left-1 top-1 text-[10px] font-bold ${t.w > t.l ? 'text-win' : t.l > t.w ? 'text-loss' : 'text-mute'}`}>{t.w}-{t.l}</span>}
@@ -63,6 +66,7 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
           <span>Wed + Sun games</span>
           <span>Small numbers: wins-losses that day</span>
           <span className="flex items-center gap-1 text-gold"><Icon d={ICONS.trophy} size={13} />Playoffs</span>
+          <span className="flex items-center gap-1.5"><span className="size-3 rounded bg-gold/30" />Playoff days</span>
         </div>
       </div>
 
