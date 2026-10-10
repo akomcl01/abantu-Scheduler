@@ -54,7 +54,7 @@ export const fmtWeekday = f({ weekday: 'long' })
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 sm:items-center" onClick={onClose} role="dialog" aria-modal aria-label={title}>
-      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-card p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-card p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-hair sm:hidden" />
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 className="font-display text-3xl leading-tight">{title}</h2>

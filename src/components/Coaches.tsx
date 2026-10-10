@@ -22,17 +22,17 @@ export function CoachTable({ state, onOpen }: { state: ScheduleState; onOpen: (m
     <div className="space-y-4">
       <Segmented<Filter> label="Competition" value={f} onChange={setF} options={[{ id: 'all', label: 'All' }, { id: 'league', label: 'League' }, { id: 'playoff', label: 'Playoffs' }]} />
       <Card className="overflow-hidden">
-        <div className="grid grid-cols-[1.5rem_1fr_2rem_2rem_2rem_3.5rem] items-center gap-x-2 border-b border-hair px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-mute">
+        <div className="grid grid-cols-[1.25rem_1fr_1.5rem_1.5rem_1.5rem_3rem] gap-x-1.5 px-3 sm:grid-cols-[1.5rem_1fr_2rem_2rem_2rem_3.5rem] sm:gap-x-2 sm:px-4 items-center border-b border-hair py-2 text-[11px] font-semibold uppercase tracking-wider text-mute">
           <span>#</span><span>Coach</span><span className="text-center">W</span><span className="text-center">D</span><span className="text-center">L</span><span className="text-center">Win</span>
         </div>
         {rows.map(({ m, t, n, pct, form }, i) => (
-          <button key={m.id} onClick={() => onOpen(m)} className="grid w-full grid-cols-[1.5rem_1fr_2rem_2rem_2rem_3.5rem] items-center gap-x-2 border-b border-hair px-4 py-3 text-left last:border-0 hover:bg-sand/60">
+          <button key={m.id} onClick={() => onOpen(m)} className="grid w-full grid-cols-[1.25rem_1fr_1.5rem_1.5rem_1.5rem_3rem] gap-x-1.5 px-3 sm:grid-cols-[1.5rem_1fr_2rem_2rem_2rem_3.5rem] sm:gap-x-2 sm:px-4 items-center border-b border-hair py-3 text-left last:border-0 hover:bg-sand/60">
             <span className="font-display text-xl leading-none text-mute">{i + 1}</span>
             <span className="flex min-w-0 items-center gap-3">
-              <Avatar m={m} size={34} ring={m.id === nowId} />
+              <span className="hidden min-[400px]:contents"><Avatar m={m} size={34} ring={m.id === nowId} /></span>
               <span className="min-w-0">
                 <span className="block truncate font-medium">{m.name}</span>
-                <span className="mt-1 flex items-center gap-1">
+                <span className="mt-1 flex items-center gap-0.5 sm:gap-1">
                   {form.length ? form.map((g) => <ResultChip key={g.id} r={g.result} size={16} />) : <span className="text-xs text-mute">No games</span>}
                 </span>
               </span>

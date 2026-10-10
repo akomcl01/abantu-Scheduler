@@ -2,7 +2,7 @@ import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr,
 import { useState } from 'react'
 import PlayerCard from './PlayerCard'
 import WeekStrip from './WeekStrip'
-import { Avatar, Btn, Card, SectionTitle, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
+import { Avatar, Btn, Card, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
 
@@ -26,6 +26,10 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
   const upcoming = matchesFrom(state, today, 30).filter((m) => m.controller).slice(0, 3)
   const prev = previousCoach(state, today)
   const benched = streak >= 3 && cur && next
+  // Pop the handover up the moment the third loss is logged. Dismissing it keeps it quiet until the next game changes things.
+  const lastGame = state.games[state.games.length - 1]?.id
+  const [dismissed, setDismissed] = useState<string | undefined>()
+  const appoint = guard(() => onChange({ ...state, benches: [...state.benches, benchStamp(state, today)] }))
 
   return (
     <div className="space-y-6">
@@ -47,20 +51,20 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
             </div>
           </div>
           {(prev || next) && (
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 grid grid-cols-2 gap-3">
               {prev && (
-                <div className="flex items-center">
-                  <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Previous</span>
-                  <span className="flex items-center gap-3 rounded-lg border border-hair bg-sand p-2 pr-4 text-sm font-semibold">
+                <div className="min-w-0">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Previous</p>
+                  <span className="flex items-center gap-3 rounded-lg border border-hair bg-sand p-2 pr-3 text-sm font-semibold">
                     <PlayerCard m={prev.member} compact dim className="w-12 shrink-0" />
-                    <span>{prev.member.name}<span className="block text-xs font-normal text-mute">{fmtShort(prev.from)} – {fmtShort(prev.to)}</span></span>
+                    <span className="min-w-0"><span className="block truncate">{prev.member.name}</span><span className="block text-xs font-normal text-mute">{fmtShort(prev.from)} – {fmtShort(prev.to)}</span></span>
                   </span>
                 </div>
               )}
               {next && (
-                <div className="flex items-center">
-                  <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Next up</span>
-                  <span className="flex items-center gap-3 rounded-lg border border-gold bg-gold/10 p-2 pr-4 text-sm font-semibold text-gold"><PlayerCard m={next} compact className="w-12 shrink-0" />{next.name}</span>
+                <div className="min-w-0">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Next up</p>
+                  <span className="flex items-center gap-3 rounded-lg border border-gold bg-gold/10 p-2 pr-3 text-sm font-semibold text-gold"><PlayerCard m={next} compact className="w-12 shrink-0" /><span className="min-w-0 truncate">{next.name}</span></span>
                 </div>
               )}
             </div>
@@ -69,7 +73,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
               <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
               <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as Coach.</p>
-              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, benchStamp(state, today)] }))}>Appoint {next.name} as Coach</Btn>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={appoint}>Appoint {next.name} as Coach</Btn>
             </div>
           )}
           <div className="mt-4">
@@ -107,6 +111,17 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
             })}
           </div>
         </section>
+      )}
+
+      {canEdit && benched && dismissed !== lastGame && (
+        <Sheet title="Handover time" onClose={() => setDismissed(lastGame)}>
+          <p className="text-lg font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
+          <p className="mt-2 text-mute">That’s three. {next.name} takes over as Coach.</p>
+          <div className="mt-5 flex gap-2">
+            <Btn variant="primary" className="flex-1" onClick={appoint}>Appoint {next.name} as Coach</Btn>
+            <Btn onClick={() => setDismissed(lastGame)}>Not now</Btn>
+          </div>
+        </Sheet>
       )}
 
       {upcoming.length > 0 && (

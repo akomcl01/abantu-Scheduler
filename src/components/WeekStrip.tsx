@@ -49,7 +49,7 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
           return (
             <button key={d} onClick={() => setSel(d)} aria-pressed={on} aria-label={fmtLong(d)}
               className={`relative flex min-h-[4.5rem] flex-col items-center justify-between rounded-2xl border px-1 pb-2 pt-2.5 transition ${on ? 'border-transparent bg-ink text-paper' : d === today ? 'border-accent/70 bg-card' : 'border-hair bg-card'} ${d < today && !on ? 'opacity-70' : ''}`}>
-              <span className={`text-[10px] font-semibold uppercase tracking-wider ${on ? 'text-paper/70' : 'text-mute'}`}>{DAYS[i]}</span>
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${on ? 'text-paper/70' : 'text-mute'}`}>{DAYS[i]}</span>
               <span className="font-display text-xl leading-none">{fmtDay(d)}</span>
               <span className="flex h-6 items-center justify-center">
                 {c ? <Avatar m={c} size={22} /> : ev ? <Icon d={ICONS.trophy} size={16} className={on ? 'text-paper' : 'text-gold'} /> : <span className={`size-1 rounded-full ${on ? 'bg-paper/40' : 'bg-hair'}`} />}

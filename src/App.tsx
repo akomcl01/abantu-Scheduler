@@ -29,11 +29,11 @@ export default function App() {
   const [pin, setPin] = useState('')
   const [bad, setBad] = useState(false)
 
-  if (!state) return <div className="grid min-h-screen place-items-center text-mute">Loading…</div>
+  if (!state) return <div className="grid min-h-dvh place-items-center text-mute">Loading…</div>
   const need = () => (isShared ? setAskPin(true) : undefined)
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-4 sm:px-6">
+    <div className="mx-auto min-h-dvh max-w-3xl px-4 sm:px-6">
       <header className="flex items-center gap-4 pt-5 sm:gap-8 sm:pt-7">
         <img src={`${import.meta.env.BASE_URL}crest.png`} alt="Abantu FC" className="size-11 shrink-0 rounded-lg bg-[#234877] object-cover" />
         <p className="font-display text-xl leading-none">Abantu</p>
