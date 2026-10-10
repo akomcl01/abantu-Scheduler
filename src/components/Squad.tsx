@@ -42,12 +42,14 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
             <button onClick={() => setProfile(m)} className="w-full" aria-label={`${m.name} profile`}>
               <PlayerCard m={m} dim={!m.active} className="mx-auto w-full max-w-[200px]" />
             </button>
-            {m.realName?.trim() && <p className="-mb-1 w-full truncate text-center font-semibold">{m.realName.trim()}</p>}
-            <div className="flex items-center gap-1">
+            {m.realName?.trim()
+              ? <p className="-mb-1 w-full truncate text-center font-semibold">{m.realName.trim()}</p>
+              : <button onClick={guard(() => setEditing(m))} className="-mb-1 min-h-8 text-sm text-mute underline">Add real name</button>}
+            <span className="-mt-1 text-center">
+              {m.id === nowId ? <Pill tone="accent">Playing</Pill> : m.id === nextId ? <Pill tone="gold">Next</Pill> : <span className="font-display text-2xl leading-none text-mute">{i + 1}</span>}
+            </span>
+            <div className="flex items-center gap-6">
               <button aria-label={`Move ${m.name} earlier`} disabled={i === 0} onClick={guard(() => move(i, -1))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand disabled:opacity-20"><Icon d={ICONS.left} /></button>
-              <span className="min-w-14 text-center">
-                {m.id === nowId ? <Pill tone="accent">Playing</Pill> : m.id === nextId ? <Pill tone="gold">Next</Pill> : <span className="font-display text-2xl leading-none text-mute">{i + 1}</span>}
-              </span>
               <button aria-label={`Move ${m.name} later`} disabled={i === state.members.length - 1} onClick={guard(() => move(i, 1))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand disabled:opacity-20"><Icon d={ICONS.right} /></button>
             </div>
             {!m.active && <span className="-mt-1 text-xs text-mute">Sitting out</span>}
