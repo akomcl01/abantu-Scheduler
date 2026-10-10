@@ -35,7 +35,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
       {cur && (
         <section>
           <div className="flex items-center gap-4">
-            <PlayerCard m={cur} className="w-20 shrink-0" />
+            <PlayerCard m={cur} className="w-28 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Coach</p>
               <h1 className="break-words font-display text-4xl leading-[0.95]">{cur.name}</h1>
@@ -43,11 +43,14 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
                 {[0, 1, 2].map((i) => <span key={i} className={`size-4 rounded-full border-2 ${i < streak ? 'border-loss bg-loss' : 'border-hair'}`} />)}
                 <span className="ml-1 text-xs text-mute">{streak}/3 losses</span>
               </div>
-              {next && (
-                <p className="mt-2 flex items-center gap-2 text-sm text-mute">Next up <Avatar m={next} size={20} /><b className="text-gold">{next.name}</b></p>
-              )}
             </div>
           </div>
+          {next && (
+            <div className="mt-6 flex items-center">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Next up</span>
+              <span className="ml-4 flex items-center gap-3 rounded-lg border border-gold bg-gold/10 p-2 pr-4 text-sm font-semibold text-gold"><PlayerCard m={next} compact className="w-12 shrink-0" />{next.name}</span>
+            </div>
+          )}
           {benched && (
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
               <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
@@ -70,6 +73,24 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
               <button onClick={guard(() => log('L'))} className="min-h-14 rounded-xl bg-loss/15 font-display text-xl text-loss active:scale-95">Loss</button>
             </div>
             <button onClick={guard(undo)} disabled={!state.games.length} className="mt-1 min-h-10 text-sm text-mute underline disabled:no-underline disabled:opacity-40">Undo last game</button>
+          </div>
+        </section>
+      )}
+
+      {active.length > 0 && (
+        <section>
+          <SectionTitle>Order of play</SectionTitle>
+          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 pt-8 sm:mx-0 sm:flex-wrap sm:px-0">
+            {active.map((m) => {
+              const now = m.id === cur?.id
+              return (
+                <div key={m.id} className="relative shrink-0">
+                  {!now && next?.id === m.id && <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Next</span>}
+                  {now && <span className="absolute -top-6 left-1/2 size-0 -translate-x-1/2 border-x-[9px] border-t-[11px] border-x-transparent border-t-accent" />}
+                  <PlayerCard m={m} compact dim={!now} className={`w-24 transition ${now ? 'scale-105' : ''}`} />
+                </div>
+              )
+            })}
           </div>
         </section>
       )}
