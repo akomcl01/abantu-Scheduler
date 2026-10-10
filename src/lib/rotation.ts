@@ -1,7 +1,6 @@
 export interface Member {
   id: string
-  name: string // character (football) name, shown on the card
-  realName?: string // the person's real name, used for the rotation when set
+  name: string // the player's name, shown on the card and everywhere in the rotation
   color: string
   active: boolean
   cardImage?: string // player picture shown inside the card (data URL or /cards/x.png); falls back to /cards/<name>.png
@@ -91,9 +90,6 @@ export function buildStints(state: ScheduleState): Stint[] {
   changes.forEach((c, i) => out.push({ memberId: active[(i + 1) % active.length].id, from: c.date, at: c.at, reason: c.reason }))
   return out
 }
-
-/** Real name when known, otherwise the character name. */
-export const who = (m: Member) => m.realName?.trim() || m.name
 
 /** The Coach before the current one, with the dates they had the team (null until a handover has happened). */
 export function previousCoach(state: ScheduleState, date: string): { member: Member; from: string; to: string } | null {

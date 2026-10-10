@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, previousCoach, seasonOn, who, type ScheduleState } from './rotation'
+import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, previousCoach, seasonOn, type ScheduleState } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -79,10 +79,6 @@ describe('previous coach', () => {
     const p = previousCoach(base, '2026-10-24')
     expect(p?.member.id).toBe('a')
     expect(p?.to).toBe('2026-10-22')
-  })
-  it('who() prefers the real name', () => {
-    expect(who({ ...mk('a'), realName: ' Theo ' })).toBe('Theo')
-    expect(who(mk('a'))).toBe('a')
   })
 })
 

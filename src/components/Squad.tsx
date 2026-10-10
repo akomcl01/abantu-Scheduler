@@ -42,9 +42,7 @@ export default function Squad({ state, canEdit, onChange, onNeedUnlock }: Props)
             <button onClick={() => setProfile(m)} className="w-full" aria-label={`${m.name} profile`}>
               <PlayerCard m={m} dim={!m.active} className="mx-auto w-full max-w-[200px]" />
             </button>
-            {m.realName?.trim()
-              ? <p className="-mb-1 w-full truncate text-center font-semibold">{m.realName.trim()}</p>
-              : <button onClick={guard(() => setEditing(m))} className="-mb-1 min-h-8 text-sm text-mute underline">Add real name</button>}
+            <p className="-mb-1 w-full truncate text-center font-semibold">{m.name}</p>
             <span className="-mt-1 text-center">
               {m.id === nowId ? <Pill tone="accent">Playing</Pill> : m.id === nextId ? <Pill tone="gold">Next</Pill> : <span className="font-display text-2xl leading-none text-mute">{i + 1}</span>}
             </span>
@@ -90,13 +88,10 @@ function EditSheet({ member, isNew, onSave, onDelete, onClose }: { member: Membe
   }
   return (
     <Sheet title={isNew ? 'Add player' : 'Edit player'} onClose={onClose}>
-      <form className="space-y-5" onPaste={(e) => { const f = [...e.clipboardData.files].find((x) => x.type.startsWith('image/')); if (f) { e.preventDefault(); onFile(f) } }} onSubmit={(e) => { e.preventDefault(); if (m.name.trim()) onSave({ ...m, name: m.name.trim(), realName: m.realName?.trim() || undefined, cardImage: m.cardImage?.trim() || undefined }) }}>
+      <form className="space-y-5" onPaste={(e) => { const f = [...e.clipboardData.files].find((x) => x.type.startsWith('image/')); if (f) { e.preventDefault(); onFile(f) } }} onSubmit={(e) => { e.preventDefault(); if (m.name.trim()) onSave({ ...m, name: m.name.trim(), cardImage: m.cardImage?.trim() || undefined }) }}>
         <PlayerCard m={m} className="mx-auto w-36" />
-        <label className="block text-sm font-medium">Real name
-          <input autoFocus className={field} value={m.realName ?? ''} onChange={(e) => setM({ ...m, realName: e.target.value })} placeholder="e.g. Theo" />
-        </label>
-        <label className="block text-sm font-medium">Character name
-          <input className={field} value={m.name} onChange={(e) => setM({ ...m, name: e.target.value })} placeholder="e.g. Ferragosto" />
+        <label className="block text-sm font-medium">Name
+          <input autoFocus className={field} value={m.name} onChange={(e) => setM({ ...m, name: e.target.value })} placeholder="e.g. Theo" />
         </label>
         <div>
           <p className="text-sm font-medium">Card picture</p>

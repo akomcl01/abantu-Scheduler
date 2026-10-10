@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { isShared } from '../lib/store'
-import { buildStints, controllerFor, todayStr, who, type ScheduleState } from '../lib/rotation'
+import { buildStints, controllerFor, todayStr, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void; onReplay?: () => void }
@@ -74,7 +74,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
           {handovers.length === 0 && <p className="p-5 text-sm text-mute">No early handovers yet. When a Coach loses 3 in a row, Home offers the handover. Use Add handover to record one that already happened, so Previous shows the right Coach.</p>}
           {handovers.map((h) => (
             <div key={h.at} className="flex items-center gap-4 px-5 py-4">
-              <div className="min-w-0 flex-1"><p className="truncate font-medium">{h.ignored ? 'Handover not counted' : `${h.from ? who(h.from) : '?'} → ${h.to ? who(h.to) : '?'}`}</p><p className={`text-sm ${h.ignored ? 'text-loss' : 'text-mute'}`}>{fmtShort(h.at.slice(0, 10))}{h.at.length > 10 ? ` · ${h.at.slice(11, 16)}` : ''}{h.ignored ? ' · before the first player starts, so it is ignored' : ''}</p></div>
+              <div className="min-w-0 flex-1"><p className="truncate font-medium">{h.ignored ? 'Handover not counted' : `${h.from ? h.from.name : '?'} → ${h.to ? h.to.name : '?'}`}</p><p className={`text-sm ${h.ignored ? 'text-loss' : 'text-mute'}`}>{fmtShort(h.at.slice(0, 10))}{h.at.length > 10 ? ` · ${h.at.slice(11, 16)}` : ''}{h.ignored ? ' · before the first player starts, so it is ignored' : ''}</p></div>
               <button aria-label="Remove handover" onClick={guard(() => onChange({ ...state, benches: state.benches.filter((b) => b !== h.at) }))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand"><Icon d="M6 6l12 12M18 6L6 18" size={18} /></button>
             </div>
           ))}

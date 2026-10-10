@@ -1,4 +1,4 @@
-import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr, parseDate, previousCoach, todayStr, who, type Comp, type Match, type Result, type ScheduleState } from '../lib/rotation'
+import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr, parseDate, previousCoach, todayStr, type Comp, type Match, type Result, type ScheduleState } from '../lib/rotation'
 import { useState } from 'react'
 import PlayerCard from './PlayerCard'
 import WeekStrip from './WeekStrip'
@@ -39,7 +39,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
             <PlayerCard m={cur} className="w-28 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Coach</p>
-              <h1 className="break-words font-display text-4xl leading-[0.95]">{who(cur)}</h1>
+              <h1 className="break-words font-display text-4xl leading-[0.95]">{cur.name}</h1>
               <div className="mt-2 flex items-center gap-1.5" aria-label={`${streak} of 3 losses in a row`}>
                 {[0, 1, 2].map((i) => <span key={i} className={`size-4 rounded-full border-2 ${i < streak ? 'border-loss bg-loss' : 'border-hair'}`} />)}
                 <span className="ml-1 text-xs text-mute">{streak}/3 losses</span>
@@ -53,23 +53,23 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
                   <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Previous</span>
                   <span className="flex items-center gap-3 rounded-lg border border-hair bg-sand p-2 pr-4 text-sm font-semibold">
                     <PlayerCard m={prev.member} compact dim className="w-12 shrink-0" />
-                    <span>{who(prev.member)}<span className="block text-xs font-normal text-mute">{fmtShort(prev.from)} – {fmtShort(prev.to)}</span></span>
+                    <span>{prev.member.name}<span className="block text-xs font-normal text-mute">{fmtShort(prev.from)} – {fmtShort(prev.to)}</span></span>
                   </span>
                 </div>
               )}
               {next && (
                 <div className="flex items-center">
                   <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-mute">Next up</span>
-                  <span className="flex items-center gap-3 rounded-lg border border-gold bg-gold/10 p-2 pr-4 text-sm font-semibold text-gold"><PlayerCard m={next} compact className="w-12 shrink-0" />{who(next)}</span>
+                  <span className="flex items-center gap-3 rounded-lg border border-gold bg-gold/10 p-2 pr-4 text-sm font-semibold text-gold"><PlayerCard m={next} compact className="w-12 shrink-0" />{next.name}</span>
                 </div>
               )}
             </div>
           )}
           {benched && (
             <div className="mt-4 rounded-2xl border border-loss/60 bg-loss/10 p-4">
-              <p className="font-semibold text-loss">{who(cur)} has lost {streak} in a row</p>
-              <p className="mt-1 text-sm text-mute">That’s three. {who(next)} takes over as Coach.</p>
-              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, benchStamp(state, today)] }))}>Appoint {who(next)} as Coach</Btn>
+              <p className="font-semibold text-loss">{cur.name} has lost {streak} in a row</p>
+              <p className="mt-1 text-sm text-mute">That’s three. {next.name} takes over as Coach.</p>
+              <Btn variant="primary" className="mt-3 w-full sm:w-auto" onClick={guard(() => onChange({ ...state, benches: [...state.benches, benchStamp(state, today)] }))}>Appoint {next.name} as Coach</Btn>
             </div>
           )}
           <div className="mt-4">
@@ -119,7 +119,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
       )}
 
       {!state.seasons.length && cur && (
-        <Card className="p-4 text-sm text-mute">Add the season dates in Settings so the app knows when {next ? who(next) : 'the next player'} takes over.</Card>
+        <Card className="p-4 text-sm text-mute">Add the season dates in Settings so the app knows when {next ? next.name : 'the next player'} takes over.</Card>
       )}
     </div>
   )
@@ -133,7 +133,7 @@ function Row({ m }: { m: Match }) {
         <p className="mt-1 text-xs uppercase tracking-wide text-mute">{fmtMon(m.date)}</p>
       </div>
       {m.controller && <Avatar m={m.controller} size={40} />}
-      <div className="min-w-0 flex-1"><p className="truncate font-medium">{m.controller ? who(m.controller) : ''}</p><p className="text-sm text-mute">{fmtWeekday(m.date)}</p></div>
+      <div className="min-w-0 flex-1"><p className="truncate font-medium">{m.controller ? m.controller.name : ''}</p><p className="text-sm text-mute">{fmtWeekday(m.date)}</p></div>
       <span className="shrink-0 text-sm text-mute">{when(m.date)}</span>
     </div>
   )
