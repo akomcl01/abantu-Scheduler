@@ -10,7 +10,7 @@ service cloud.firestore {
 
     match /club/{doc} {
       allow read: if true;
-      allow write: if isEditor() && request.resource.size < 500000;
+      allow write: if isEditor();
     }
     match /games/{id} {
       allow read: if true;
