@@ -1,8 +1,8 @@
-import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr, parseDate, previousCoach, todayStr, type Comp, type Match, type Result, type ScheduleState } from '../lib/rotation'
+import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr, parseDate, playoffsOn, previousCoach, todayStr, type Comp, type Match, type Result, type ScheduleState } from '../lib/rotation'
 import { useState } from 'react'
 import PlayerCard from './PlayerCard'
 import WeekStrip from './WeekStrip'
-import { Avatar, Btn, Card, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
+import { Avatar, Btn, Card, Pill, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
 
@@ -25,6 +25,7 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
   const undo = () => onChange({ ...state, games: state.games.filter((g) => g.id !== state.games[state.games.length - 1]?.id) })
   const upcoming = matchesFrom(state, today, 30).filter((m) => m.controller).slice(0, 3)
   const prev = previousCoach(state, today)
+  const playoff = playoffsOn(state, today) ?? (state.events ?? []).filter((e) => e.date > today && (e.playoffs ?? /playoff/i.test(e.title))).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
   const benched = streak >= 3 && cur && next
   // Pop the handover up the moment the third loss is logged. Dismissing it keeps it quiet until the next game changes things.
   const lastGame = state.games[state.games.length - 1]?.id
@@ -127,8 +128,9 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
       {upcoming.length > 0 && (
         <section>
           <SectionTitle>Next games</SectionTitle>
+          {playoff && <p className="mb-3 text-sm text-mute"><b className="text-gold">Playoffs {playoff.end ? `until ${fmtShort(playoff.end)}` : `from ${fmtShort(playoff.date)}`}.</b> {playoff.end ? '' : 'End date not set yet. '}The Coach keeps the team until they finish.</p>}
           <Card className="divide-y divide-hair overflow-hidden">
-            {upcoming.map((m) => <Row key={m.date} m={m} />)}
+            {upcoming.map((m) => <Row key={m.date} m={m} playoffs={!!playoffsOn(state, m.date)} />)}
           </Card>
         </section>
       )}
@@ -140,16 +142,16 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
   )
 }
 
-function Row({ m }: { m: Match }) {
+function Row({ m, playoffs }: { m: Match; playoffs: boolean }) {
   return (
-    <div className="flex items-center gap-4 px-5 py-4">
+    <div className={`flex items-center gap-4 px-5 py-4 ${playoffs ? 'border-l-4 border-gold bg-gold/10' : ''}`}>
       <div className="w-12 shrink-0">
         <p className="font-display text-3xl leading-none">{fmtDay(m.date)}</p>
         <p className="mt-1 text-xs uppercase tracking-wide text-mute">{fmtMon(m.date)}</p>
       </div>
       {m.controller && <Avatar m={m.controller} size={40} />}
       <div className="min-w-0 flex-1"><p className="truncate font-medium">{m.controller ? m.controller.name : ''}</p><p className="text-sm text-mute">{fmtWeekday(m.date)}</p></div>
-      <span className="shrink-0 text-sm text-mute">{when(m.date)}</span>
+      <span className="flex shrink-0 flex-col items-end gap-1 text-sm text-mute">{playoffs && <Pill tone="gold">Playoffs</Pill>}{when(m.date)}</span>
     </div>
   )
 }

@@ -10,7 +10,11 @@ export interface GameEvent {
   id: string
   date: string // YYYY-MM-DD
   title: string // e.g. Clubs playoffs
+  end?: string // last day, when known. Playoffs with no end are treated as still running.
+  playoffs?: boolean // older events have no flag: a title with "playoff" counts
 }
+
+export const isPlayoffs = (e: GameEvent) => e.playoffs ?? /playoff/i.test(e.title)
 
 export type Result = 'W' | 'D' | 'L'
 
@@ -78,16 +82,47 @@ export interface Stint {
   reason: 'start' | 'season' | 'benched'
 }
 
+/**
+ * The playoffs running on `date`, if any. With no end date they run on until the next season starts
+ * (or until an end date is set). The Coach keeps the team through them.
+ */
+export function playoffsOn(state: ScheduleState, date: string): GameEvent | null {
+  return (state.events ?? []).find((e) => {
+    if (!isPlayoffs(e) || date < e.date) return false
+    if (e.end) return date <= e.end
+    const nextSeason = state.seasons.map((s) => s.start).filter((d) => d > e.date).sort()[0]
+    return !nextSeason || date < nextSeason
+  }) ?? null
+}
+
 /** Every handover in date order: season starts and bench events each move to the next active player. */
 export function buildStints(state: ScheduleState): Stint[] {
   const active = state.members.filter((m) => m.active)
   if (!active.length) return []
   const changes = [
-    ...state.seasons.filter((x) => x.start > state.startDate).map((x) => ({ date: x.start, at: x.start, reason: 'season' as const, order: 0 })),
+    // A new season never takes the team mid-playoffs: if it starts inside a playoff with a known end, hand over the day after.
+    ...state.seasons.filter((x) => x.start > state.startDate).map((x) => {
+      const w = (state.events ?? []).find((e) => isPlayoffs(e) && e.end && e.date <= x.start && x.start <= e.end)
+      const d = w?.end ? addDays(w.end, 1) : x.start
+      return { date: d, at: d, reason: 'season' as const, order: 0 }
+    }),
     ...[...new Set(state.benches)].filter((d) => d > state.startDate).map((d) => ({ date: d.slice(0, 10), at: d, reason: 'benched' as const, order: 1 })),
   ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order)
   const out: Stint[] = [{ memberId: active[0].id, from: state.startDate, at: state.startDate, reason: 'start' }]
   changes.forEach((c, i) => out.push({ memberId: active[(i + 1) % active.length].id, from: c.date, at: c.at, reason: c.reason }))
+  return out
+}
+
+/** Everyone who had the team at some point between `start` and `end`, in order. */
+export function coachesDuring(state: ScheduleState, start: string, end: string): Member[] {
+  const stints = buildStints(state)
+  const out: Member[] = []
+  stints.forEach((st, i) => {
+    const nextFrom = stints[i + 1]?.from
+    if (st.from > end || (nextFrom !== undefined && nextFrom <= start)) return
+    const m = state.members.find((x) => x.id === st.memberId)
+    if (m && out[out.length - 1]?.id !== m.id) out.push(m)
+  })
   return out
 }
 

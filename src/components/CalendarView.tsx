@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { addDays, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
+import { addDays, coachesDuring, controllerFor, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Icon, ICONS, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -71,13 +71,14 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
         <div className="divide-y divide-hair overflow-hidden rounded-2xl border border-hair bg-card">
           {state.seasons.length === 0 && <p className="px-5 py-4 text-sm text-mute">Add the season dates in Settings to see who plays each one.</p>}
           {[...state.seasons].sort((a, b) => a.start.localeCompare(b.start)).map((s) => {
-            const c = controllerFor(state, s.start > state.startDate ? s.start : state.startDate)
+            const coaches = coachesDuring(state, s.start, s.end)
+            const c = coaches[coaches.length - 1]
             const live = seasonOn(state, today)?.id === s.id
             return (
               <div key={s.id} className="flex items-center gap-4 px-5 py-4">
                 {c ? <Avatar m={c} size={40} ring={live} /> : <span className="size-10 rounded-full bg-sand" />}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{c?.name ?? 'Not started'}</p>
+                  <p className="truncate font-medium">{coaches.length ? coaches.map((m) => m.name).join(' → ') : 'Not started'}</p>
                   <p className="text-sm text-mute">{s.name} · {fmtShort(s.start)} to {fmtShort(s.end)}</p>
                 </div>
                 {live && <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-on-accent">Now</span>}
@@ -95,7 +96,7 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
             <button key={e.id} onClick={() => setSelected(e.date)} className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-sand/60">
               <span className="w-8 font-display text-3xl leading-none">{fmtDay(e.date)}</span>
               <span className="grid size-9 place-items-center rounded-full bg-gold/15 text-gold"><Icon d={ICONS.trophy} size={18} /></span>
-              <span className="min-w-0 flex-1"><span className="block truncate font-medium">{e.title}</span><span className="block text-sm text-mute">{fmtShort(e.date)}</span></span>
+              <span className="min-w-0 flex-1"><span className="block truncate font-medium">{e.title}</span><span className="block text-sm text-mute">{fmtShort(e.date)}{e.end ? ` to ${fmtShort(e.end)}` : ''}</span></span>
               <Icon d={ICONS.right} size={18} className="text-mute" />
             </button>
           ))}
@@ -160,17 +161,22 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
 
 function AddEvent({ onSave, onClose }: { onSave: (e: GameEvent) => void; onClose: () => void }) {
   const [date, setDate] = useState(todayStr())
+  const [end, setEnd] = useState('')
   const [title, setTitle] = useState('Clubs playoffs')
   const field = 'mt-2 min-h-12 w-full rounded-xl border border-hair bg-paper px-4'
   return (
     <Sheet title="Add playoffs" onClose={onClose}>
-      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (date && title.trim()) onSave({ id: crypto.randomUUID(), date, title: title.trim() }) }}>
+      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (date && title.trim() && (!end || end >= date)) onSave({ id: crypto.randomUUID(), date, title: title.trim(), playoffs: true, ...(end ? { end } : {}) }) }}>
         <label className="block text-sm font-medium">What
           <input className={field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Clubs playoffs" />
         </label>
         <label className="block text-sm font-medium">Date
           <input type="date" className={field} value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
+        <label className="block text-sm font-medium">Last day <span className="font-normal text-mute">(optional)</span>
+          <input type="date" className={field} value={end} min={date} onChange={(e) => setEnd(e.target.value)} />
+        </label>
+        <p className="text-sm text-mute">Leave the last day empty if you don't know it yet. The playoffs run on, and the Coach keeps the team, until you set it.</p>
         <Btn type="submit" variant="primary" className="w-full">Add to calendar</Btn>
       </form>
     </Sheet>

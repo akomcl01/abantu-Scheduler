@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { isShared } from '../lib/store'
-import { buildStints, controllerFor, todayStr, type ScheduleState } from '../lib/rotation'
+import { buildStints, coachesDuring, todayStr, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void; onReplay?: () => void }
@@ -56,11 +56,12 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
         <Card className="divide-y divide-hair overflow-hidden">
           {seasons.length === 0 && <p className="p-5 text-sm text-mute">No seasons yet. Add each FC27 season with its start and end date. A new season hands the team to the next player.</p>}
           {seasons.map((x) => {
-            const c = controllerFor(state, x.start > state.startDate ? x.start : state.startDate)
+            const coaches = coachesDuring(state, x.start, x.end)
+            const c = coaches[coaches.length - 1]
             return (
               <div key={x.id} className="flex items-center gap-4 px-5 py-4">
                 {c ? <Avatar m={c} size={36} /> : <span className="size-9 rounded-full bg-sand" />}
-                <div className="min-w-0 flex-1"><p className="truncate font-medium">{x.name}</p><p className="text-sm text-mute">{fmtShort(x.start)} to {fmtShort(x.end)}{c ? ` · ${c.name}` : ''}</p></div>
+                <div className="min-w-0 flex-1"><p className="truncate font-medium">{x.name}</p><p className="text-sm text-mute">{fmtShort(x.start)} to {fmtShort(x.end)}{coaches.length ? ` · ${coaches.map((m) => m.name).join(' → ')}` : ''}</p></div>
                 <button aria-label={`Remove ${x.name}`} onClick={guard(() => onChange({ ...state, seasons: state.seasons.filter((y) => y.id !== x.id) }))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand"><Icon d="M6 6l12 12M18 6L6 18" size={18} /></button>
               </div>
             )

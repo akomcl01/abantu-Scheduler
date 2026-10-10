@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, previousCoach, seasonOn, type ScheduleState } from './rotation'
+import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, coachesDuring, matchesFrom, playoffsOn, nextMember, previousCoach, seasonOn, type ScheduleState } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -61,6 +61,36 @@ describe('duplicate and early benches', () => {
   it('ignores a handover dated before the start date', () => {
     const s = { ...base, startDate: '2026-10-09', benches: ['2026-10-07T21:00:00'] }
     expect(controllerFor(s, '2026-10-10')?.id).toBe('a')
+  })
+})
+
+describe('playoffs', () => {
+  const ev = { id: 'p', date: '2026-10-15', title: 'Clubs playoffs' }
+  it('runs on from the start date until an end date is set', () => {
+    const s = { ...base, events: [ev] }
+    expect(playoffsOn(s, '2026-10-14')).toBeNull()
+    expect(playoffsOn(s, '2026-10-18')?.id).toBe('p')
+    const closed = { ...base, events: [{ ...ev, end: '2026-10-25' }] }
+    expect(playoffsOn(closed, '2026-10-25')?.id).toBe('p')
+    expect(playoffsOn(closed, '2026-10-26')).toBeNull()
+  })
+  it('stops when the next season starts if no end is set', () => {
+    expect(playoffsOn({ ...base, events: [ev] }, '2026-10-23')).toBeNull()
+  })
+  it('a season starting inside playoffs with a known end hands over after them', () => {
+    const s = { ...base, events: [{ ...ev, date: '2026-10-15', end: '2026-10-28' }] }
+    expect(controllerFor(s, '2026-10-23')?.id).toBe('a')
+    expect(controllerFor(s, '2026-10-29')?.id).toBe('b')
+  })
+})
+
+describe('coaches in a season', () => {
+  it('lists the starter and whoever took over mid-season', () => {
+    const s = { ...base, benches: ['2026-10-07T21:00:00'] }
+    expect(coachesDuring(s, '2026-09-27', '2026-10-22').map((m) => m.id)).toEqual(['a', 'b'])
+  })
+  it('does not include the previous season coach when a season starts with a handover', () => {
+    expect(coachesDuring(base, '2026-10-23', '2026-12-03').map((m) => m.id)).toEqual(['b'])
   })
 })
 
