@@ -9,7 +9,7 @@ export default function Vault({ clips, votes, who }: { clips: Clip[]; votes: Vot
   return (
     <section>
       <p className="mb-3 px-1 text-sm text-mute">The best goal of every week, kept for good.</p>
-      {winners.length === 0 ? <Card className="p-4 text-mute">Nothing here yet. A winner is added every Sunday.</Card> : (
+      {winners.length === 0 ? <p className="px-1 text-mute">Nothing here yet. A winner is added every Sunday.</p> : (
         <Card className="divide-y divide-hair overflow-hidden">
           {winners.map(({ week, clip, votes: n }) => <Entry key={week} week={week} url={clip.url} title={clip.title} author={who(clip.playerId)} votes={n} />)}
         </Card>
