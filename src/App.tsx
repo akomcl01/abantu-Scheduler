@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import CalendarView from './components/CalendarView'
+import Goals from './components/Goals'
 import Home from './components/Home'
 import Settings from './components/Settings'
 import Ceremony, { latestHandover } from './components/Ceremony'
@@ -11,6 +12,7 @@ const tabs = [
   { id: 'home', label: 'Next up', icon: ICONS.home },
   { id: 'calendar', label: 'Calendar', icon: ICONS.cal },
   { id: 'squad', label: 'Squad', icon: ICONS.users },
+  { id: 'goals', label: 'Goals', icon: ICONS.trophy },
   { id: 'settings', label: 'Settings', icon: ICONS.gear },
 ] as const
 type Tab = (typeof tabs)[number]['id']
@@ -44,6 +46,7 @@ export default function App() {
         {tab === 'home' && <Home state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'squad' && <Squad state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
+        {tab === 'goals' && <Goals state={state} />}
         {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} onReplay={latestHandover(state) ? () => setReplay(true) : undefined} />}
       </main>
 

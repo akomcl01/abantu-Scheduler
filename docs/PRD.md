@@ -24,7 +24,16 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 | Calendar | Month grid with Coach per game day, results, seasons list, playoffs and events with trophy markers |
 | Squad | player card frames; Squad view and coach league table (win rate, form); coach profile with season-by-season career |
 | Handover ceremony | On a Coach change: "Comunicado Oficial" thank-you, then a fun contract to sign. Wording is templated in `src/lib/messages.ts` with seeded variations |
+| Goals | Goal of the week: each player uploads one clip a week, everyone votes, the winner is announced on Sunday (the 2nd game day). Past winners are listed |
 | Settings | First player start date, seasons, FC or Classic look, share link, replay ceremony |
+
+## Goal of the week
+- A week runs **Monday to Sunday**. Each player uploads **one clip per week** (uploading again replaces it). Anyone can watch.
+- **Voting**: one vote per player per week, changeable until voting closes, **never for your own clip**. Vote counts are hidden until the winner is announced.
+- **Open Monday to Saturday. On Sunday (the 2nd game day) voting and uploads close and the winner is announced.** Most votes wins; a tie goes to the earlier upload; no votes means no winner.
+- **No PIN.** Players pick their name once per device ("Playing as…"). This is an honor system, fine for a friend group; the PIN still guards everything else.
+- Videos are uploaded straight from the phone to **Vercel Blob** (public URLs, video files only, up to 100 MB) through `api/upload.ts`. Firestore keeps only `clips/{week__playerId}` (title + URL) and `votes/{week__voterId}`. Without Firebase config, clips and votes are saved on the device; uploading still needs the deployed app (or `vercel dev`).
+- Rules live in `src/lib/goals.ts` (pure, unit tested).
 
 ## Design
 - Default look mimics the FC 27 Pro Clubs menu (dark, white italic headings, mint accent, gold highlights). "Classic" is the warm paper variant.
@@ -34,14 +43,14 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 - Wording: always say **Coach**. Use neutral pronouns (they/their) in generated text.
 
 ## Data
-`members` (order = order of play), `startDate`, `seasons`, `benches`, `games`, `events`, `recordPics`. Rotation is derived from these in `src/lib/rotation.ts` (pure, unit tested). Nothing else is stored.
+`members` (order = order of play), `startDate`, `seasons`, `benches`, `games`, `events`, `recordPics`. Rotation is derived from these in `src/lib/rotation.ts` (pure, unit tested). Goal-of-the-week `clips` and `votes` are stored separately (see above) because players write them without the PIN.
 
 ## Shared data (this branch: `firebase`)
 - Everyone reads the same live data; editing needs the group PIN.
 - **Firestore** collections: `club/state` (members, start date, seasons, benches, events), `games/{id}` (one doc per game, so two people logging at once never overwrite each other), `pics/{id}` (record screenshots and uploaded player pictures, one doc each).
-- **Rules**: public read. Write only for the shared editor account.
+- **Rules**: public read. Write only for the shared editor account, except `clips` and `votes`, which anyone can create or replace if the document is well formed (the honor system above); only the editor can delete them.
 - **PIN = the editor account's password** (Firebase Auth email/password). Unlock signs in with it; a wrong PIN fails to sign in.
-- **No Cloud Storage** (needs the paid plan). Screenshots are compressed to under 450 KB and kept in Firestore.
+- **No Cloud Storage** (needs the paid plan). Screenshots are compressed to under 450 KB and kept in Firestore. Goal videos are too big for that, so they go to Vercel Blob.
 - Without Firebase config the app runs in local mode (saved on the device), so development and demos still work.
 
 ## Out of scope
@@ -54,6 +63,7 @@ Accounts per person, push notifications, tracking individual goals or assists, i
 - Supabase was dropped (projects full). Firebase is the shared store.
 - A bench is stamped just after the loss that completed the 3-loss run (not at tap time), so those losses stay with the benched Coach and the next Coach starts at 0.
 - Players have **one name, their real name**, used on the card and everywhere in the rotation (a separate character name was tried and dropped). Home shows the **Previous** Coach with their dates, then **Next up**.
+- Goal of the week: **Vercel Blob** for the video files (chosen over pasting links), **pick-your-name identity** instead of the PIN (chosen over PIN-only), winner on **Sunday** as the 2nd game day.
 - Hosting is Vercel (abantu-scheduler.vercel.app). Firebase is the database and editor sign-in only.
 
 ## Open items

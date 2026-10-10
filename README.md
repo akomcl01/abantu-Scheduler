@@ -5,6 +5,7 @@ A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sund
 - **Next up** – who's on the sticks, their losses in a row (3 triggers a handover), and recent results
 - **Calendar** – who has each game, logged results, seasons and playoffs
 - **Squad** – character names, teams, and the rotation order
+- **Goals** – goal of the week: players upload a clip, everyone votes, the winner is announced on Sunday
 - **Settings** – first player's start date, seasons, look (FC / Classic), share link, editing PIN
 
 ## Records
@@ -40,4 +41,14 @@ Everyone can read the schedule. Only someone who knows the PIN can change it. Ga
 
 To publish the site: `npm run build`, then `npx firebase-tools deploy --only hosting` (set your project with `npx firebase-tools use <project-id>` first).
 
-Stack: Vite, React, TypeScript, Tailwind CSS v4, Firebase (Firestore + Auth).
+## Goal of the week (Vercel Blob)
+
+Videos upload from the phone to Vercel Blob through `api/upload.ts`. One-time setup:
+
+1. Vercel dashboard > your project > **Storage** > **Create Database** > **Blob** (public access). This adds `BLOB_READ_WRITE_TOKEN` to the project.
+2. Publish the new `clips` and `votes` rules in `firestore.rules` (step 6 above).
+3. Redeploy. For local testing use `vercel env pull .env.local` and `npx vercel dev` (plain `npm run dev` has no `/api`, so uploads fail there; everything else works).
+
+Players pick their name in the Goals tab (no PIN). Weeks run Monday to Sunday; voting is open Monday to Saturday and the winner is announced on Sunday.
+
+Stack: Vite, React, TypeScript, Tailwind CSS v4, Firebase (Firestore + Auth), Vercel Blob.
