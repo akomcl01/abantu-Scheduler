@@ -1,6 +1,7 @@
 export interface Member {
   id: string
-  name: string
+  name: string // character (football) name, shown on the card
+  realName?: string // the person's real name, used for the rotation when set
   color: string
   active: boolean
   cardImage?: string // player picture shown inside the card (data URL or /cards/x.png); falls back to /cards/<name>.png
@@ -84,11 +85,25 @@ export function buildStints(state: ScheduleState): Stint[] {
   if (!active.length) return []
   const changes = [
     ...state.seasons.filter((x) => x.start > state.startDate).map((x) => ({ date: x.start, at: x.start, reason: 'season' as const, order: 0 })),
-    ...state.benches.filter((d) => d > state.startDate).map((d) => ({ date: d.slice(0, 10), at: d, reason: 'benched' as const, order: 1 })),
+    ...[...new Set(state.benches)].filter((d) => d > state.startDate).map((d) => ({ date: d.slice(0, 10), at: d, reason: 'benched' as const, order: 1 })),
   ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order)
   const out: Stint[] = [{ memberId: active[0].id, from: state.startDate, at: state.startDate, reason: 'start' }]
   changes.forEach((c, i) => out.push({ memberId: active[(i + 1) % active.length].id, from: c.date, at: c.at, reason: c.reason }))
   return out
+}
+
+/** Real name when known, otherwise the character name. */
+export const who = (m: Member) => m.realName?.trim() || m.name
+
+/** The Coach before the current one, with the dates they had the team (null until a handover has happened). */
+export function previousCoach(state: ScheduleState, date: string): { member: Member; from: string; to: string } | null {
+  const hit = buildStints(state).filter((s) => s.from <= date)
+  if (hit.length < 2) return null
+  const prev = hit[hit.length - 2]
+  const cur = hit[hit.length - 1]
+  const member = state.members.find((m) => m.id === prev.memberId)
+  if (!member) return null
+  return { member, from: prev.from, to: cur.reason === 'benched' ? cur.at.slice(0, 10) : addDays(cur.from, -1) }
 }
 
 export function stintOn(state: ScheduleState, date: string): Stint | null {
@@ -131,6 +146,17 @@ export function lossStreak(state: ScheduleState, today: string) {
   let streak = 0
   for (let i = mine.length - 1; i >= 0 && mine[i].result === 'L'; i--) streak++
   return { streak, recent: mine.slice(-8), today: tally(mine.filter((g) => g.date === today)), season: tally(mine) }
+}
+
+/**
+ * When to stamp a bench: just after the loss that completed the streak, so those losses stay with the
+ * benched Coach and the new Coach starts clean. Falls back to now when there is no losing run.
+ */
+export function benchStamp(state: ScheduleState, today: string): string {
+  const st = stintOn(state, today)
+  const mine = state.games.filter((g) => st && g.at >= st.at && g.date <= today).sort((a, b) => a.at.localeCompare(b.at))
+  const last = mine[mine.length - 1]
+  return last && last.result === 'L' ? `${last.at}.5` : nowStr()
 }
 
 export interface Match {

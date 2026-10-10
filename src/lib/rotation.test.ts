@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, seasonOn, type ScheduleState } from './rotation'
+import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, matchesFrom, nextMember, previousCoach, seasonOn, who, type ScheduleState } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -50,6 +50,54 @@ describe('season rotation', () => {
   it('finds the season for a date', () => {
     expect(seasonOn(base, '2026-11-01')?.id).toBe('s2')
     expect(seasonOn(base, '2028-01-01')).toBeNull()
+  })
+})
+
+describe('duplicate and early benches', () => {
+  it('counts the same handover once', () => {
+    const s = { ...base, benches: ['2026-10-07T21:00:00', '2026-10-07T21:00:00', '2026-10-07T21:00:00'] }
+    expect(controllerFor(s, '2026-10-09')?.id).toBe('b')
+  })
+  it('ignores a handover dated before the start date', () => {
+    const s = { ...base, startDate: '2026-10-09', benches: ['2026-10-07T21:00:00'] }
+    expect(controllerFor(s, '2026-10-10')?.id).toBe('a')
+  })
+})
+
+describe('previous coach', () => {
+  it('is null until someone has taken over', () => {
+    expect(previousCoach(base, '2026-10-05')).toBeNull()
+  })
+  it('after a bench, names the benched coach and their dates', () => {
+    const s = { ...base, benches: ['2026-10-07T21:30:00'] }
+    const p = previousCoach(s, '2026-10-09')
+    expect(p?.member.id).toBe('a')
+    expect(p?.from).toBe('2026-09-27')
+    expect(p?.to).toBe('2026-10-07')
+  })
+  it('after a season change, ends the day before the new season', () => {
+    const p = previousCoach(base, '2026-10-24')
+    expect(p?.member.id).toBe('a')
+    expect(p?.to).toBe('2026-10-22')
+  })
+  it('who() prefers the real name', () => {
+    expect(who({ ...mk('a'), realName: ' Theo ' })).toBe('Theo')
+    expect(who(mk('a'))).toBe('a')
+  })
+})
+
+describe('bench stamp', () => {
+  it('hands over right after the third loss, so those losses stay with the benched coach', () => {
+    const games = [g('2026-10-04', 'W'), g('2026-10-07', 'L', '19:00:00'), g('2026-10-07', 'L', '19:20:00'), g('2026-10-07', 'L', '19:40:00')]
+    const s0 = { ...base, games }
+    const stamp = benchStamp(s0, '2026-10-09')
+    expect(stamp.startsWith('2026-10-07T19:40:00')).toBe(true)
+    const s = { ...s0, benches: [stamp], games: [...games, g('2026-10-07', 'L', '20:00:00')] }
+    expect(controllerFor(s, '2026-10-09')?.id).toBe('b')
+    expect(lossStreak(s, '2026-10-09').streak).toBe(1)
+    expect(coachGames(s).get('a')?.length).toBe(4)
+    expect(coachGames(s).get('b')?.length).toBe(1)
+    expect(previousCoach(s, '2026-10-09')?.to).toBe('2026-10-07')
   })
 })
 

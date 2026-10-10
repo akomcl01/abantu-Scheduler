@@ -52,12 +52,14 @@ Accounts per person, push notifications, tracking individual goals or assists, i
 - "Group night" removed: the same Coach plays both nights.
 - "Any" was tried as the word for the role, then replaced with **Coach**.
 - Supabase was dropped (projects full). Firebase is the shared store.
+- A bench is stamped just after the loss that completed the 3-loss run (not at tap time), so those losses stay with the benched Coach and the next Coach starts at 0.
+- Members have a **real name** (used for the rotation on Home and the calendar day card) and a **character name** (shown on the card). Home shows the **Previous** Coach with their dates, then **Next up**.
+- Hosting is Vercel (abantu-scheduler.vercel.app). Firebase is the database and editor sign-in only.
 
 ## Open items
 - Real character names, squad order and card images from the group.
 - Season dates (enter in Settings). FC 27 Clubs playoff dates are not published; add them as they are announced.
-- Firebase project: create it, enable Firestore and Email/Password auth, add the editor user, fill `.env` (see README).
-- Hosting (Firebase Hosting or GitHub Pages) once the shared data works.
+- Real names for the other players; playoff start date (15 Oct) to be added as an event.
 
 ## Done when
 - A new person opens the link and sees the same Coach, record and calendar as everyone else.

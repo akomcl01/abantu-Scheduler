@@ -22,11 +22,22 @@
 
 html, body, #root { min-height: 100%; }
 body {
-  background: #0D0F11 radial-gradient(900px 520px at 50% -140px, #1E252B 0%, transparent 70%) no-repeat;
+  background: #0D0F11;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+/* FC locker-room backdrop, darkened so text stays readable. Fixed layer (not background-attachment) so iOS scrolls smoothly. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(13, 15, 17, 0.72) 0%, rgba(13, 15, 17, 0.86) 45%, rgba(13, 15, 17, 0.94) 100%),
+    url('/bg-locker.jpg') center top / cover no-repeat;
+}
+[data-theme="classic"] body::before { display: none; }
 .font-display { font-style: italic; font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; }
 input, select, textarea { color: inherit; font: inherit; color-scheme: dark; }
 button { cursor: pointer; }

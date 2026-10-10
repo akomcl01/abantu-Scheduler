@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addDays, compOf, controllerFor, dow, seasonOn, tally, todayStr, type ScheduleState } from '../lib/rotation'
+import { addDays, compOf, controllerFor, dow, seasonOn, tally, todayStr, who, type ScheduleState } from '../lib/rotation'
 import { Avatar, Icon, ICONS, ResultChip, fmtDay, fmtLong, fmtShort } from './ui'
 
 const monday = (d: string) => addDays(d, -((dow(d) + 6) % 7))
@@ -69,7 +69,7 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
         {coach ? (
           <div className="mt-3 flex items-center gap-3">
             <Avatar m={coach} size={36} />
-            <div className="min-w-0 flex-1"><p className="truncate font-semibold">{coach.name}</p><p className="text-sm text-mute">Coach · {dow(sel) === 0 ? 'Sunday' : 'Wednesday'} game</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate font-semibold">{who(coach)}</p><p className="text-sm text-mute">Coach · {dow(sel) === 0 ? 'Sunday' : 'Wednesday'} game</p></div>
           </div>
         ) : <p className="mt-2 text-sm text-mute">{isMatch(sel) ? 'Before the rotation starts.' : 'No game day.'}</p>}
 

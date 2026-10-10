@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { isShared } from '../lib/store'
-import { controllerFor, todayStr, type ScheduleState } from '../lib/rotation'
+import { buildStints, controllerFor, todayStr, who, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onLock: () => void; theme: 'fc' | 'classic'; onTheme: (t: 'fc' | 'classic') => void; onReplay?: () => void }
@@ -15,6 +15,12 @@ const Row = ({ title, desc, children }: { title: string; desc: string; children?
 export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLock, theme, onTheme, onReplay }: Props) {
   const [copied, setCopied] = useState(false)
   const [addingSeason, setAddingSeason] = useState(false)
+  const [addingHandover, setAddingHandover] = useState(false)
+  const stints = buildStints(state)
+  const handovers = [...new Set(state.benches)].sort().map((at) => {
+    const i = stints.findIndex((st) => st.reason === 'benched' && st.at === at)
+    return { at, ignored: i < 1, from: i > 0 ? state.members.find((m) => m.id === stints[i - 1].memberId) : undefined, to: i > 0 ? state.members.find((m) => m.id === stints[i].memberId) : undefined }
+  })
   const seasons = [...state.seasons].sort((a, b) => a.start.localeCompare(b.start))
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
   return (
@@ -62,6 +68,20 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
         </Card>
       </section>
 
+      <section>
+        <SectionTitle aside={<button onClick={guard(() => setAddingHandover(true))} className="flex min-h-9 items-center gap-1.5 text-xs font-semibold text-gold"><Icon d={ICONS.plus} size={14} />Add handover</button>}>Handovers</SectionTitle>
+        <Card className="divide-y divide-hair overflow-hidden">
+          {handovers.length === 0 && <p className="p-5 text-sm text-mute">No early handovers yet. When a Coach loses 3 in a row, Home offers the handover. Use Add handover to record one that already happened, so Previous shows the right Coach.</p>}
+          {handovers.map((h) => (
+            <div key={h.at} className="flex items-center gap-4 px-5 py-4">
+              <div className="min-w-0 flex-1"><p className="truncate font-medium">{h.ignored ? 'Handover not counted' : `${h.from ? who(h.from) : '?'} → ${h.to ? who(h.to) : '?'}`}</p><p className={`text-sm ${h.ignored ? 'text-loss' : 'text-mute'}`}>{fmtShort(h.at.slice(0, 10))}{h.at.length > 10 ? ` · ${h.at.slice(11, 16)}` : ''}{h.ignored ? ' · before the first player starts, so it is ignored' : ''}</p></div>
+              <button aria-label="Remove handover" onClick={guard(() => onChange({ ...state, benches: state.benches.filter((b) => b !== h.at) }))} className="grid size-10 place-items-center rounded-full text-mute hover:bg-sand"><Icon d="M6 6l12 12M18 6L6 18" size={18} /></button>
+            </div>
+          ))}
+        </Card>
+      </section>
+
+      {addingHandover && <AddHandover onClose={() => setAddingHandover(false)} onSave={(at) => { if (!state.benches.includes(at)) onChange({ ...state, benches: [...state.benches, at] }); setAddingHandover(false) }} />}
       {addingSeason && <AddSeason n={seasons.length + 1} last={seasons[seasons.length - 1]?.end} onClose={() => setAddingSeason(false)} onSave={(x) => { onChange({ ...state, seasons: [...state.seasons, x] }); setAddingSeason(false) }} />}
     </div>
   )
@@ -81,6 +101,19 @@ function AddSeason({ n, last, onSave, onClose }: { n: number; last?: string; onS
           <label className="block text-sm font-medium">Ends<input type="date" className={field} value={end} min={start} onChange={(e) => setEnd(e.target.value)} /></label>
         </div>
         <Btn type="submit" variant="primary" className="w-full" disabled={!end || end < start}>Add season</Btn>
+      </form>
+    </Sheet>
+  )
+}
+
+function AddHandover({ onSave, onClose }: { onSave: (at: string) => void; onClose: () => void }) {
+  const [at, setAt] = useState(`${todayStr()}T12:00`)
+  return (
+    <Sheet title="Add handover" onClose={onClose}>
+      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (at) onSave(`${at}:00`) }}>
+        <p className="text-sm text-mute">The next player in the squad order takes over at this moment. Games before it count for the Coach who had the team; games after it count for the next one.</p>
+        <label className="block text-sm font-medium">When<input type="datetime-local" className="mt-2 min-h-12 w-full rounded-xl border border-hair bg-paper px-4" value={at} onChange={(e) => setAt(e.target.value)} /></label>
+        <Btn type="submit" variant="primary" className="w-full" disabled={!at}>Add handover</Btn>
       </form>
     </Sheet>
   )
