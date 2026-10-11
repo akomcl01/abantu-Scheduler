@@ -31,15 +31,18 @@ export function useGoals() {
   useEffect(() => {
     if (!fbPlayers) return
     const { db } = fbPlayers
-    const fail = (e: Error) => setError(e.message)
+    // A collection that can't be read counts as empty, so the screen still loads and can explain why.
+    const fail = (e: Error & { code?: string }) => {
+      setError(e.code === 'permission-denied' ? "Goals aren't switched on yet: the Firestore rules for it haven't been published. Ask the Coach." : e.message)
+    }
     let clips: Clip[] | null = null
     let votes: Vote[] | null = null
     let comments: Comment[] | null = null
     const push = () => { if (clips && votes && comments) setData({ clips, votes, comments }) }
     const offs = [
-      onSnapshot(collection(db, 'clips'), (s) => { clips = s.docs.map((d) => d.data() as Clip); push() }, fail),
-      onSnapshot(collection(db, 'votes'), (s) => { votes = s.docs.map((d) => d.data() as Vote); push() }, fail),
-      onSnapshot(collection(db, 'comments'), (s) => { comments = s.docs.map((d) => d.data() as Comment); push() }, fail),
+      onSnapshot(collection(db, 'clips'), (s) => { clips = s.docs.map((d) => d.data() as Clip); push() }, (e) => { clips = clips ?? []; fail(e); push() }),
+      onSnapshot(collection(db, 'votes'), (s) => { votes = s.docs.map((d) => d.data() as Vote); push() }, (e) => { votes = votes ?? []; fail(e); push() }),
+      onSnapshot(collection(db, 'comments'), (s) => { comments = s.docs.map((d) => d.data() as Comment); push() }, (e) => { comments = comments ?? []; fail(e); push() }),
     ]
     return () => offs.forEach((off) => off())
   }, [])
@@ -108,7 +111,7 @@ export function useMe() {
     const { auth } = fbPlayers
     return onAuthStateChanged(auth, (u) => {
       if (u) setUid(u.uid)
-      else signInAnonymously(auth).catch(() => setAuthError('Could not sign this phone in. The Coach needs to switch on Anonymous sign-in in Firebase.'))
+      else signInAnonymously(auth).catch(() => { setAuthError('Could not sign this phone in. The Coach needs to switch on Anonymous sign-in in Firebase.'); setVerified('no') })
     })
   }, [])
 
