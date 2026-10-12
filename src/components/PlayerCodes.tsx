@@ -27,7 +27,7 @@ export default function PlayerCodes({ members, canEdit, onNeedUnlock }: { member
   }, [canEdit])
 
   if (!fb) return null
-  const players = members.filter((m) => m.active)
+  const players = members // the whole squad, including players sitting out of the rotation
 
   const make = async (ids: string[]) => {
     if (!fb) return
@@ -52,7 +52,7 @@ export default function PlayerCodes({ members, canEdit, onNeedUnlock }: { member
               <div key={m.id} className="flex items-center gap-3 px-5 py-3">
                 <Avatar m={m} size={36} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{m.name}</p>
+                  <p className="truncate font-medium">{m.name}{!m.active && <span className="ml-2 text-xs font-normal text-mute">Sitting out</span>}</p>
                   <p className="text-sm tabular-nums text-mute">{codes[m.id] ? showCode(codes[m.id]) : 'No code yet'}</p>
                 </div>
                 {codes[m.id] && (claimed.has(m.id) ? <Pill tone="accent">On a phone</Pill> : <Pill>Not used</Pill>)}

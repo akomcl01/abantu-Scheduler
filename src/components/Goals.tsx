@@ -15,7 +15,7 @@ export default function Goals({ state }: { state: ScheduleState }) {
   const { me: meId, saved, verified, claim, authError } = useMe()
   const [pick, setPick] = useState(false)
   const [view, setView] = useState<'week' | 'vault'>('week')
-  const players = state.members.filter((m) => m.active)
+  const players = state.members // everyone in the squad can take part, including players sitting out of the rotation
   const who = (id: string): Member => state.members.find((m) => m.id === id) ?? { id, name: 'Former player', color: '#8a8f98', active: false }
   const me = players.find((m) => m.id === meId) ?? null
 
