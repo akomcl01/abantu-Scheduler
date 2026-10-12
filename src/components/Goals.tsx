@@ -85,6 +85,15 @@ export default function Goals({ state }: { state: ScheduleState }) {
             <Btn onClick={() => setPick(true)} className="min-h-10 shrink-0 px-4">{me ? 'Change' : isShared && saved ? 'Verify it\'s you' : 'Who are you?'}</Btn>
           </div>
 
+          {started && (
+            <Card className="border-accent/40 bg-accent/10 p-4">
+              <p className="font-semibold">{mine ? 'Your goal is in.' : 'Goal of the week is open!'}</p>
+              <p className="mt-1 text-sm text-mute">{mine ? 'Now upvote your favourites and drop a comment. The winner is announced Sunday.' : 'Scored a belter this week? Record it, upload it and let the squad vote. The more goals, the better. Get yours in before Sunday.'}</p>
+            </Card>
+          )}
+
+          <HowTo defaultOpen={!started} />
+
           {started && hadLast && (
             <Card className="border-gold bg-gold/10 p-4">
               {lastWinner ? (
@@ -236,5 +245,30 @@ function IdentitySheet({ players, start, claim, onClose }: { players: Member[]; 
         <button type="button" onClick={() => { setChosen(null); setCode(''); setErr(null) }} className="min-h-10 w-full text-sm text-mute underline">Not {chosen.name}?</button>
       </form>
     </Sheet>
+  )
+}
+
+/** Players record on a PS5, so this walks through getting the clip from the console to here. */
+function HowTo({ defaultOpen }: { defaultOpen: boolean }) {
+  const steps = [
+    <>Get your personal code from the Coach. They send it to you privately. Tap <b className="text-ink">Who are you?</b>, pick your name and enter it once.</>,
+    <>Record your goal on your PS5. Press the <b className="text-ink">Create</b> button on your controller and choose <b className="text-ink">Save Recent Gameplay</b>, or start a new recording before the goal.</>,
+    <>Download the <b className="text-ink">PlayStation App</b> on your phone and sign in with your PlayStation account.</>,
+    <>In the app, open the <b className="text-ink">Captures</b> tab. Your saved video is there.</>,
+    <>Download the video to your phone.</>,
+    <>Come back here, tap <b className="text-ink">Choose a video</b> and pick it. Add a title if you like. Up to {MAX_CLIP_MB} MB, one clip a week.</>,
+  ]
+  return (
+    <details open={defaultOpen} className="group rounded-2xl border border-hair bg-card">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 font-semibold [&::-webkit-details-marker]:hidden">
+        How to upload your goal
+        <span className="text-mute transition group-open:rotate-180"><Icon d={ICONS.down} size={18} /></span>
+      </summary>
+      <ol className="space-y-3 px-4 pb-4 text-sm text-mute">
+        {steps.map((t, i) => (
+          <li key={i} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-sand text-xs font-bold text-ink">{i + 1}</span><span className="pt-0.5">{t}</span></li>
+        ))}
+      </ol>
+    </details>
   )
 }

@@ -2,15 +2,19 @@ import { controllerFor, lossStreak, matchesFrom, benchStamp, nextMember, nowStr,
 import { useState } from 'react'
 import PlayerCard from './PlayerCard'
 import WeekStrip from './WeekStrip'
-import { Avatar, Btn, Card, Pill, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
+import { announceDay, hasStarted, weekStart } from '../lib/goals'
+import { Avatar, Btn, Card, Icon, Pill, SectionTitle, Sheet, fmtDay, fmtMon, fmtShort, fmtWeekday } from './ui'
 
-interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
+interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void; onOpenGoals?: () => void }
 
 const daysUntil = (d: string) => Math.round((parseDate(d).getTime() - parseDate(todayStr()).getTime()) / 86_400_000)
 const when = (d: string) => { const n = daysUntil(d); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In ${n} days` }
 
-export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) {
+export default function Home({ state, canEdit, onChange, onNeedUnlock, onOpenGoals }: Props) {
   const today = todayStr()
+  const goalsWeek = weekStart(today)
+  const [hideGoals, setHideGoals] = useState(() => { try { return localStorage.getItem('abantu-goals-hide') === goalsWeek } catch { return false } })
+  const dismissGoals = () => { setHideGoals(true); try { localStorage.setItem('abantu-goals-hide', goalsWeek) } catch { /* ignore */ } }
   const [comp, setCompState] = useState<Comp>(() => { try { return localStorage.getItem('abantu-comp') === 'playoff' ? 'playoff' : 'league' } catch { return 'league' } })
   const setComp = (c: Comp) => { setCompState(c); try { localStorage.setItem('abantu-comp', c) } catch { /* ignore */ } }
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
@@ -35,6 +39,15 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock }: Props) 
   return (
     <div className="space-y-6">
       <WeekStrip state={state} />
+
+      {onOpenGoals && hasStarted(today) && !hideGoals && (
+        <Card className="relative border-accent/40 bg-accent/10 p-4 pr-12">
+          <p className="font-semibold">Goal of the week is open!</p>
+          <p className="mt-1 text-sm text-mute">Scored a belter? Record it, upload it and let the squad vote. Winner announced {fmtWeekday(announceDay(goalsWeek))}.</p>
+          <Btn variant="primary" className="mt-3" onClick={onOpenGoals}>Upload your goal</Btn>
+          <button onClick={dismissGoals} aria-label="Hide until next week" className="absolute right-2 top-2 grid size-10 place-items-center rounded-full text-mute hover:bg-sand"><Icon d="M6 6l12 12M18 6L6 18" size={18} /></button>
+        </Card>
+      )}
 
       {!active.length && <Card className="p-6 text-mute">Add players in the Squad tab to start.</Card>}
 

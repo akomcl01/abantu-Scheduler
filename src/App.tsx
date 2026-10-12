@@ -43,7 +43,7 @@ export default function App() {
 
       <main className="pb-32 pt-8 sm:pt-10">
         {error && <p className="mb-4 rounded-xl border border-accent/40 bg-card p-3 text-sm text-accent">{error}</p>}
-        {tab === 'home' && <Home state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
+        {tab === 'home' && <Home state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onOpenGoals={() => setTab('goals')} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'squad' && <Squad state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'goals' && <Goals state={state} />}
