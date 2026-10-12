@@ -4,8 +4,8 @@ Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls 
 
 ## Branches
 - `main`: earlier version (local mode + Supabase).
-- `firebase`: current work, and what is deployed. Firestore + editor sign-in (the group PIN is the editor account's password). The Firebase project exists (`abantu-fc-scheduler-a4ab5`, setup steps in `README.md`); the site is live on Vercel at https://abantu-scheduler.vercel.app. Without `.env` the app runs in local mode.
-- `goals`: created for goal-of-the-week work, branched from `firebase`.
+- `firebase`: the app before goal of the week. Firestore + editor sign-in (the group PIN is the editor account's password). The Firebase project exists (`abantu-fc-scheduler-a4ab5`, setup steps in `README.md`). Without `.env` the app runs in local mode. Not what is deployed any more.
+- `goals`: current work, branched from `firebase`, and **what is deployed**: the site is live on Vercel at https://abantu-scheduler.vercel.app from this branch. It adds goal of the week (see the code map and `docs/PRD.md`).
 
 ## Commands
 - `npm run dev` (add `-- --force` after installing deps; Vite's dep cache goes stale and the page goes blank)
@@ -15,7 +15,14 @@ Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls 
 - `src/lib/rotation.ts`: all rules, pure and unit tested (stints, loss streak, records, coach career). Change rules here first, with a test.
 - `src/lib/sync.ts`: Firestore layout (`club/state`, `games/{id}`, `pics/{id}`) as pure diff/join helpers. `store.ts` picks local vs Firebase hook.
 - `src/lib/messages.ts`: handover wording as templates with seeded variations. Edit copy here only.
-- `src/components/`: `Home`, `WeekStrip`, `Records`, `CalendarView`, `Squad`, `Coaches` (table + career), `PlayerCard`, `Ceremony` (farewell, welcome, contract, crest stamp), `Settings`.
+- `src/components/`: `Home`, `WeekStrip`, `Records`, `CalendarView`, `Squad`, `Coaches` (table + career), `PlayerCard`, `Ceremony` (farewell, welcome, contract, crest stamp), `Settings`, and for goal of the week `Goals` (posts, upvote, comments, upload guide, name + code picker, countdown), `Vault` (past winners), `PlayerCodes` (Coach makes and copies codes, in Settings).
+- Goal of the week:
+  - `src/lib/goals.ts`: all rules, pure and unit tested (Sunday-to-Sunday weeks, `GOALS_START` kickoff, countdown, ranking, winners, vote blocks). Change rules here first, with a test.
+  - `src/lib/goalsStore.ts`: clips, votes and comments (own collections, local mode keeps them on the device) and `useMe`, which verifies who a phone is by claiming a name with a personal code.
+  - `src/lib/codes.ts`: personal code generation and normalising.
+  - `src/lib/firebase.ts`: also exports `fbPlayers`, a second Firebase app with anonymous sign-in so players never mix with the editor's PIN sign-in.
+  - `api/upload.ts`: Vercel route that hands out Vercel Blob upload tokens for videos. Needs `BLOB_READ_WRITE_TOKEN` on the Vercel project; uploads only work on the deployed site.
+  - `firestore.rules`: `codes` and `claims` (editor only), and `clips`, `votes`, `comments` accepted only from the phone holding that player's claim.
 - Theme tokens live in `src/index.css` (FC dark default, `[data-theme="classic"]` variant).
 
 ## House rules
