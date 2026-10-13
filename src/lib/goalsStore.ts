@@ -1,4 +1,4 @@
-import { upload } from '@vercel/blob/client'
+import { uploadPresigned } from '@vercel/blob/client'
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth'
 import { collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -66,7 +66,7 @@ export function useGoals() {
   const addClip = useCallback(async (file: File, week: string, playerId: string, title: string, at: string, onProgress: (pct: number) => void): Promise<string | null> => {
     const ext = (file.name.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
     try {
-      const blob = await upload(`goals/${week}/${playerId}.${ext.length >= 2 && ext.length <= 5 ? ext : 'mp4'}`, file, {
+      const blob = await uploadPresigned(`goals/${week}/${playerId}.${ext.length >= 2 && ext.length <= 5 ? ext : 'mp4'}`, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
         multipart: true,

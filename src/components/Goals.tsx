@@ -22,7 +22,16 @@ export default function Goals({ state }: { state: ScheduleState }) {
   const [title, setTitle] = useState('')
   const [pct, setPct] = useState<number | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [picked, setPicked] = useState<File | null>(null) // chosen but not uploaded yet
+  const [preview, setPreview] = useState<string | null>(null)
   const file = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!picked) { setPreview(null); return }
+    const url = URL.createObjectURL(picked)
+    setPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [picked])
 
   if (!clips) return <p className="py-10 text-center text-mute">Loading…</p>
 
@@ -34,15 +43,19 @@ export default function Goals({ state }: { state: ScheduleState }) {
   const hadLast = lastWeek >= GOALS_START && clips.some((c) => c.week === lastWeek)
   const posts = [...thisWeek].sort((a, b) => a.at.localeCompare(b.at))
 
-  const onFile = async (f: File | undefined) => {
-    if (!f || !me) return
+  const choose = (f: File | undefined) => {
+    if (!f) return
     if (!f.type.startsWith('video/')) return setMsg('Pick a video file.')
     if (f.size > MAX_CLIP_MB * 1024 * 1024) return setMsg(`That clip is over ${MAX_CLIP_MB} MB. Trim it and try again.`)
+    setMsg(null); setPicked(f)
+  }
+  const send = async () => {
+    if (!picked || !me) return
     setMsg(null); setPct(0)
-    const err = await addClip(f, week, me.id, title, nowStr(), setPct)
+    const err = await addClip(picked, week, me.id, title, nowStr(), setPct)
     setPct(null)
     if (err) setMsg(err)
-    else { setTitle(''); setMsg('Uploaded. Good luck!') }
+    else { setTitle(''); setPicked(null); setMsg('Uploaded. Good luck!') }
     if (file.current) file.current.value = ''
   }
   const vote = (c: Clip) => (me ? castVote(week, me.id, c.id) : setPick(true))
@@ -106,15 +119,33 @@ export default function Goals({ state }: { state: ScheduleState }) {
             </Card>
           )}
 
-          {started && me && (
+          {started && (
             <Card className="space-y-3 p-4">
               <p className="font-semibold">{mine ? 'Your clip is in. Replace it?' : 'Upload your goal'}</p>
-              <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))} placeholder="Title (optional), e.g. Volley from halfway" disabled={pct !== null} className="min-h-12 w-full rounded-xl border border-hair bg-paper px-4" />
-              <input ref={file} type="file" accept="video/*" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-              <Btn variant="primary" className="w-full" disabled={pct !== null} onClick={() => file.current?.click()}>{pct !== null ? `Uploading ${pct}%` : mine ? 'Choose a new video' : 'Choose a video'}</Btn>
-              {pct !== null && <div className="h-2 overflow-hidden rounded-full bg-hair" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} /></div>}
-              {msg && <p className="text-sm text-mute" role="status">{msg}</p>}
-              <p className="text-xs text-mute">One clip per player each week, up to {MAX_CLIP_MB} MB.</p>
+              {!me ? (
+                <>
+                  <p className="text-sm text-mute">{verified === 'checking' ? 'Checking this phone…' : isShared ? 'Enter your personal code first. It proves it is you, so only you can upload under your name.' : 'Pick your name first.'}</p>
+                  <Btn variant="primary" className="w-full" onClick={() => setPick(true)}>{isShared && saved ? 'Verify it\'s you' : 'Who are you?'}</Btn>
+                </>
+              ) : (
+                <>
+                  <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))} placeholder="Title (optional), e.g. Volley from halfway" disabled={pct !== null} className="min-h-12 w-full rounded-xl border border-hair bg-paper px-4" />
+                  <input ref={file} type="file" accept="video/*" hidden onChange={(e) => { choose(e.target.files?.[0]); e.target.value = '' }} />
+                  {picked ? (
+                    <>
+                      {preview && <video src={preview} controls playsInline preload="metadata" className="aspect-video w-full rounded-xl bg-black" />}
+                      <p className="truncate text-sm text-mute">{picked.name} · {(picked.size / 1024 / 1024).toFixed(1)} MB</p>
+                      <Btn variant="primary" className="w-full" disabled={pct !== null} onClick={send}>{pct !== null ? `Uploading ${pct}%` : 'Upload goal'}</Btn>
+                      <Btn className="w-full" disabled={pct !== null} onClick={() => file.current?.click()}>Choose a different video</Btn>
+                    </>
+                  ) : (
+                    <Btn variant="primary" className="w-full" onClick={() => file.current?.click()}>{mine ? 'Choose a new video' : 'Choose a video'}</Btn>
+                  )}
+                  {pct !== null && <div className="h-2 overflow-hidden rounded-full bg-hair" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} /></div>}
+                  {msg && <p className="text-sm text-mute" role="status">{msg}</p>}
+                  <p className="text-xs text-mute">One clip per player each week, up to {MAX_CLIP_MB} MB.</p>
+                </>
+              )}
             </Card>
           )}
 
