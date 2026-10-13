@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOALS_START, announceDay, clipId, commentsFor, countdown, hasStarted, isClosed, nextDrop, pastWinners, rank, startOfDay, voteBlock, voteId, weekStart, winnerOf, type Clip, type Comment, type Vote } from './goals'
+import { GOALS_START, announceDay, clipId, commentsFor, countdown, goalFromSearch, hasStarted, isClosed, nextDrop, pastWinners, rank, shareTitle, shareUrl, startOfDay, voteBlock, voteId, weekStart, winnerOf, type Clip, type Comment, type Vote } from './goals'
 
 const W = '2026-10-11' // the kickoff Sunday
 const clip = (playerId: string, at: string, week = W): Clip => ({ id: clipId(week, playerId), week, playerId, title: '', url: 'https://x/v.mp4', at })
@@ -100,5 +100,23 @@ describe('goal of the week: comments', () => {
     const c = (id: string, clip: string, at: string): Comment => ({ id, clipId: clip, authorId: 'a', text: id, at })
     const all = [c('2', 'x', '2026-10-12T12:00:00'), c('1', 'x', '2026-10-12T11:00:00'), c('3', 'y', '2026-10-12T10:00:00')]
     expect(commentsFor(all, 'x').map((k) => k.id)).toEqual(['1', '2'])
+  })
+})
+
+describe('goal of the week: sharing', () => {
+  it('titles a shared goal with the date of its week', () => {
+    expect(shareTitle('2026-10-11')).toBe('Abantu FC - 11 Oct Goal of the week Contender')
+    expect(shareTitle('2026-10-18')).toBe('Abantu FC - 18 Oct Goal of the week Contender')
+  })
+  it('makes a direct link that reads back to the same goal', () => {
+    const id = clipId(W, 'abc-123')
+    const url = shareUrl('https://abantu-scheduler.vercel.app', id)
+    expect(url).toBe('https://abantu-scheduler.vercel.app/?goal=2026-10-11__abc-123')
+    expect(goalFromSearch(new URL(url).search)).toBe(id)
+  })
+  it('finds no goal when the link has none', () => {
+    expect(goalFromSearch('')).toBeNull()
+    expect(goalFromSearch('?goal=')).toBeNull()
+    expect(goalFromSearch('?x=1')).toBeNull()
   })
 })

@@ -1,4 +1,4 @@
-import { addDays, dow } from './rotation'
+import { addDays, dow, parseDate } from './rotation'
 
 /**
  * Goal of the week. A week runs from one Sunday (the 2nd game day) to the next. Uploads and votes are open all
@@ -99,3 +99,12 @@ export function voteBlock(clip: Clip, voterId: string, today: string): string | 
 
 /** Comments on one clip, oldest first. */
 export const commentsFor = (comments: Comment[], clip: string) => comments.filter((c) => c.clipId === clip).sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id))
+
+/** A direct link to one goal. Opening it takes anyone straight to that clip, no sign-in needed to watch. */
+export const shareUrl = (origin: string, clip: string) => `${origin}/?goal=${encodeURIComponent(clip)}`
+/** The shared goal id in a page URL's query string, if any. */
+export const goalFromSearch = (search: string) => new URLSearchParams(search).get('goal') || null
+
+/** The heading a shared goal goes out with, e.g. "Abantu FC - 11 Oct Goal of the week Contender". `week` is the Sunday the week opened. */
+export const shareTitle = (week: string) =>
+  `Abantu FC - ${new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short' }).format(parseDate(week))} Goal of the week Contender`

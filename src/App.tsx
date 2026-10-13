@@ -6,6 +6,7 @@ import Settings from './components/Settings'
 import Ceremony, { latestHandover } from './components/Ceremony'
 import Squad from './components/Squad'
 import { Btn, Icon, ICONS, Sheet } from './components/ui'
+import { goalFromSearch } from './lib/goals'
 import { isShared, useSchedule } from './lib/store'
 
 const tabs = [
@@ -25,7 +26,9 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
   const setTheme = (t: Theme) => { setThemeState(t); try { localStorage.setItem('abantu-theme', t) } catch { /* ignore */ } }
   const { state, save, canEdit, unlock, error } = useSchedule()
-  const [tab, setTab] = useState<Tab>('home')
+  const [shared, setShared] = useState<string | null>(() => goalFromSearch(location.search)) // a goal opened from a shared link
+  const [tab, setTab] = useState<Tab>(() => (goalFromSearch(location.search) ? 'goals' : 'home'))
+  const clearShared = () => { setShared(null); history.replaceState(null, '', location.pathname) }
   const [askPin, setAskPin] = useState(false)
   const [replay, setReplay] = useState(false)
   const [pin, setPin] = useState('')
@@ -46,7 +49,7 @@ export default function App() {
         {tab === 'home' && <Home state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onOpenGoals={() => setTab('goals')} />}
         {tab === 'calendar' && <CalendarView state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
         {tab === 'squad' && <Squad state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} />}
-        {tab === 'goals' && <Goals state={state} />}
+        {tab === 'goals' && <Goals state={state} sharedId={shared} onClearShared={clearShared} />}
         {tab === 'settings' && <Settings state={state} canEdit={canEdit} onChange={save} onNeedUnlock={need} onLock={() => unlock(null)} theme={theme} onTheme={setTheme} onReplay={latestHandover(state) ? () => setReplay(true) : undefined} />}
       </main>
 

@@ -3,10 +3,11 @@ import { GOALS_START, MAX_CLIP_MB, MAX_COMMENT, MAX_TITLE, announceDay, clipId, 
 import { isShared } from '../lib/store'
 import { useGoals, useMe } from '../lib/goalsStore'
 import { addDays, nowStr, todayStr, type Member, type ScheduleState } from '../lib/rotation'
+import ShareButton from './ShareButton'
 import Vault from './Vault'
 import { Avatar, Btn, Card, Icon, ICONS, Pill, SectionTitle, Segmented, Sheet, fmtLong, fmtShort, fmtWeekday } from './ui'
 
-export default function Goals({ state }: { state: ScheduleState }) {
+export default function Goals({ state, sharedId, onClearShared }: { state: ScheduleState; sharedId?: string | null; onClearShared?: () => void }) {
   const today = todayStr()
   const week = weekStart(today)
   const started = hasStarted(today)
@@ -36,6 +37,7 @@ export default function Goals({ state }: { state: ScheduleState }) {
   if (!clips) return <p className="py-10 text-center text-mute">Loading…</p>
 
   const thisWeek = clips.filter((c) => c.week === week)
+  const sharedClip = sharedId ? clips.find((c) => c.id === sharedId) ?? null : null
   const mine = me ? thisWeek.find((c) => c.id === clipId(week, me.id)) : undefined
   const myVote = me ? voteOf(votes, week, me.id) : undefined
   const lastWeek = addDays(week, -7)
@@ -71,6 +73,23 @@ export default function Goals({ state }: { state: ScheduleState }) {
 
       {view === 'vault' ? <Vault clips={clips} votes={votes} who={who} /> : (
         <>
+          {sharedId && (
+            <Card className="border-gold bg-gold/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">Shared goal</p>
+              {sharedClip ? (
+                <>
+                  <div className="mt-2 flex items-center gap-3">
+                    <Avatar m={who(sharedClip.playerId)} size={40} />
+                    <div className="min-w-0 flex-1"><p className="truncate font-display text-2xl leading-none">{who(sharedClip.playerId).name}</p>{sharedClip.title && <p className="mt-1 truncate text-sm text-mute">{sharedClip.title}</p>}</div>
+                    <ShareButton clip={sharedClip} name={who(sharedClip.playerId).name} />
+                  </div>
+                  <Video url={sharedClip.url} className="mt-3" />
+                </>
+              ) : <p className="mt-2 text-mute">That goal could not be found. It may have been removed.</p>}
+              <Btn className="mt-3 w-full" onClick={onClearShared}>See this week's goals</Btn>
+            </Card>
+          )}
+
           {!started ? (
             <Card className="border-gold bg-gold/10 p-5 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">Kicks off {fmtLong(GOALS_START)}</p>
@@ -206,6 +225,7 @@ function Post({ clip, author, who, me, picked, block, comments, onVote, onCommen
           <button onClick={() => (me ? input.current?.focus() : onNeedName())} aria-label="Comment" className="grid size-11 place-items-center rounded-full text-ink active:scale-90"><Icon d={ICONS.chat} size={26} /></button>
           {block && !picked && <span className="ml-1 text-sm text-mute">{block}</span>}
           {picked && <span className="ml-1 text-sm text-accent">Your upvote</span>}
+          <ShareButton clip={clip} name={author.name} className="ml-auto" />
         </div>
         {clip.title && <p className="mt-1 text-sm"><b>{author.name}</b> {clip.title}</p>}
         {comments.length > 2 && !all && <button onClick={() => setAll(true)} className="mt-1 min-h-8 text-sm text-mute">View all {comments.length} comments</button>}
