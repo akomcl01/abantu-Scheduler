@@ -246,3 +246,13 @@ export function careerFor(state: ScheduleState, memberId: string) {
       all: tally(r.games),
     }))
 }
+
+/**
+ * Should the handover ceremony pop up by itself? Only when the handover is happening: it took effect today, or it
+ * took effect while this screen was already open (`openedWith` is the handover that was current when the app opened).
+ * And only once per device. Opening the app days later shows nothing; Settings can still replay it.
+ */
+export function ceremonyDue(h: { key: string; from: string }, today: string, seen: string[], openedWith: string | null) {
+  if (seen.includes(h.key)) return false
+  return h.from === today || h.key !== openedWith
+}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { addDays, buildStints, seasonOn, stintOn, tally, todayStr, type Member, type ScheduleState } from '../lib/rotation'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { buildStints, ceremonyDue, seasonOn, stintOn, tally, todayStr, type Member, type ScheduleState } from '../lib/rotation'
 import { farewell, welcome } from '../lib/messages'
 import PlayerCard from './PlayerCard'
 import { Btn, fmtShort } from './ui'
@@ -29,11 +29,17 @@ interface Props { state: ScheduleState; replay: boolean; onReplayDone: () => voi
 
 export default function Ceremony({ state, replay, onReplayDone }: Props) {
   const info = useMemo(() => latestHandover(state), [state])
+  const openedWith = useRef<string | null>(info?.key ?? null) // the handover already in place when the app opened
+  const [shown, setShown] = useState<string | null>(null) // the handover being shown this session
   const [dismissed, setDismissed] = useState<string | null>(null)
-  const fresh = !!info && info.from >= addDays(todayStr(), -7) && !readSeen().includes(info.key) && dismissed !== info.key
-  const open = !!info && (fresh || replay)
+  const due = !!info && ceremonyDue(info, todayStr(), readSeen(), openedWith.current)
+  useEffect(() => {
+    // Counts as seen the moment it first appears, so a reload halfway through doesn't bring it back.
+    if (info && due && shown !== info.key && dismissed !== info.key) { markSeen(info.key); setShown(info.key) }
+  }, [info?.key, due])
+  const open = !!info && ((shown === info.key && dismissed !== info.key) || replay)
   if (!open || !info) return null
-  const close = () => { markSeen(info.key); setDismissed(info.key); onReplayDone() }
+  const close = () => { setDismissed(info.key); onReplayDone() }
   return <Screens key={info.key} info={info} onClose={close} />
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, coachesDuring, matchesFrom, playoffsOn, nextMember, previousCoach, seasonOn, type ScheduleState } from './rotation'
+import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, coachesDuring, matchesFrom, playoffsOn, nextMember, previousCoach, seasonOn, type ScheduleState, ceremonyDue } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -189,5 +189,24 @@ describe('coach records', () => {
     expect(c[0].playoff).toEqual({ w: 0, d: 0, l: 1 })
     expect(winRate(c[0].all)).toBe(67)
     expect(winRate({ w: 0, d: 0, l: 0 })).toBeNull()
+  })
+})
+
+describe('handover ceremony: when it pops up', () => {
+  const h = { key: 'p2@2026-10-14', from: '2026-10-14' }
+  it('shows on the day the handover happens', () => {
+    expect(ceremonyDue(h, '2026-10-14', [], h.key)).toBe(true)
+  })
+  it('shows live when the handover happens while the app is open', () => {
+    expect(ceremonyDue(h, '2026-10-14', [], 'p1@2026-09-27')).toBe(true)
+    expect(ceremonyDue({ ...h, from: '2026-10-13' }, '2026-10-14', [], 'p1@2026-09-27')).toBe(true) // e.g. past midnight
+  })
+  it('does not show days later, however often the app is opened', () => {
+    expect(ceremonyDue(h, '2026-10-15', [], h.key)).toBe(false)
+    expect(ceremonyDue(h, '2026-10-20', [], h.key)).toBe(false)
+  })
+  it('shows only once per device', () => {
+    expect(ceremonyDue(h, '2026-10-14', [h.key], h.key)).toBe(false)
+    expect(ceremonyDue(h, '2026-10-14', [h.key], 'p1@2026-09-27')).toBe(false)
   })
 })

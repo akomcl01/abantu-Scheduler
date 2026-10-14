@@ -5,7 +5,7 @@ Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls 
 ## Branches
 - `main`: earlier version (local mode + Supabase).
 - `firebase`: the app before goal of the week. Firestore + editor sign-in (the group PIN is the editor account's password). The Firebase project exists (`abantu-fc-scheduler-a4ab5`, setup steps in `README.md`). Without `.env` the app runs in local mode. Not what is deployed any more.
-- `goals`: current work, branched from `firebase`, and **what is deployed**: the site is live on Vercel at https://abantu-scheduler.vercel.app from this branch. It adds goal of the week (see the code map and `docs/PRD.md`).
+- `goals`: current work, branched from `firebase`, and **what is deployed**: the site is live on Vercel at https://www.abantufc.com (abantufc.com redirects there; abantu-scheduler.vercel.app still works) from this branch. It adds goal of the week (see the code map and `docs/PRD.md`).
 
 ## Commands
 - `npm run dev` (add `-- --force` after installing deps; Vite's dep cache goes stale and the page goes blank)
