@@ -2,7 +2,7 @@
 
 A simple, responsive scheduler for our FIFA group. We play **Wednesdays and Sundays**. One person — the **Coach** — controls the whole team for a **whole FC27 season**; the next player in the squad order takes over at the next season, or early if the current player loses **3 in a row**.
 
-- **Home** – the week, who's on the sticks (and who was before and who's next), their losses in a row (3 triggers a handover popup), one-tap game logging, next games
+- **Home** – the week, who's on the sticks (and who was before and who's next), their losses in a row today (3 in one game day triggers a handover popup; each game day starts at 0), one-tap game logging, next games
 - **Calendar** – who has each game, logged results, seasons and playoffs
 - **Squad** – players, their card pictures, and the rotation order
 - **Goals** – goal of the week: players upload a clip, everyone votes, the winner is announced every Sunday (with a countdown)

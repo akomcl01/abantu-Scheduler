@@ -11,7 +11,7 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 ## Core rules
 - One **Coach** controls the whole Abantu team on **Wednesdays and Sundays**.
 - A Coach keeps the team for a **whole season and through the playoffs**. At the next season start the next Coach in the squad order takes over. Playoffs have a start date and an optional last day; with no last day they run on until one is set (or the next season starts), and the Coach keeps the team.
-- A Coach is **benched after 3 losses in a row** and the next Coach takes over early. A win or a draw breaks the streak. League and playoff games both count. The streak only counts games since that Coach took over.
+- A Coach is **benched after 3 losses in a row on one game day** and the next Coach takes over early. **Every game day starts at 0**: yesterday's last loss does not carry into today, it stays in the earlier record (season and career tallies still include it). A win or a draw breaks the streak. League and playoff games both count. The streak only counts games since that Coach took over.
 - Order of play is the squad order, and it loops.
 - A game is credited by **when it was played**, not just the day. On a day with a handover, the day views (Home week strip, Calendar) split the games by Coach, so the loss that benches a Coach stays with them. **Add handover** (Settings) starts a minute after that day's last logged game (noon if none) so it never takes games the outgoing Coach already played.
 
@@ -72,6 +72,7 @@ Accounts per person, push notifications, tracking individual goals or assists, i
 - "Group night" removed: the same Coach plays both nights.
 - "Any" was tried as the word for the role, then replaced with **Coach**.
 - Supabase was dropped (projects full). Firebase is the shared store.
+- The 3-loss count is **per game day** (changed from counting across days, which carried Sunday's last loss into Wednesday's counter).
 - A bench is stamped just after the loss that completed the 3-loss run (not at tap time), so those losses stay with the benched Coach and the next Coach starts at 0.
 - Players have **one name, their real name**, used on the card and everywhere in the rotation (a separate character name was tried and dropped). Home shows the **Previous** Coach with their dates, then **Next up**.
 - Goal of the week: **Vercel Blob** for the video files (chosen over pasting links), **personal codes + claiming a name** for identity (chosen over a plain name picker, which let anyone vote as anyone, and over PIN-only), winner on **Sunday** as the 2nd game day. Weeks run **Sunday to Sunday** (not Monday to Sunday) so that Sunday is both the kickoff and every announcement day, with a countdown to it.

@@ -58,9 +58,9 @@ export default function Home({ state, canEdit, onChange, onNeedUnlock, onOpenGoa
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mute">Coach</p>
               <h1 className="break-words font-display text-4xl leading-[0.95]">{cur.name}</h1>
-              <div className="mt-2 flex items-center gap-1.5" aria-label={`${streak} of 3 losses in a row`}>
+              <div className="mt-2 flex items-center gap-1.5" aria-label={`${streak} of 3 losses in a row today`}>
                 {[0, 1, 2].map((i) => <span key={i} className={`size-4 rounded-full border-2 ${i < streak ? 'border-loss bg-loss' : 'border-hair'}`} />)}
-                <span className="ml-1 text-xs text-mute">{streak}/3 losses</span>
+                <span className="ml-1 text-xs text-mute">{streak}/3 losses today</span>
               </div>
             </div>
           </div>

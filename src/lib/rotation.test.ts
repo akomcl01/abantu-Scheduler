@@ -120,7 +120,7 @@ describe('bench stamp', () => {
     expect(stamp.startsWith('2026-10-07T19:40:00')).toBe(true)
     const s = { ...s0, benches: [stamp], games: [...games, g('2026-10-07', 'L', '20:00:00')] }
     expect(controllerFor(s, '2026-10-09')?.id).toBe('b')
-    expect(lossStreak(s, '2026-10-09').streak).toBe(1)
+    expect(lossStreak(s, '2026-10-07').streak).toBe(1) // b's own game that day
     expect(coachGames(s).get('a')?.length).toBe(4)
     expect(coachGames(s).get('b')?.length).toBe(1)
     expect(previousCoach(s, '2026-10-09')?.to).toBe('2026-10-07')
@@ -128,17 +128,25 @@ describe('bench stamp', () => {
 })
 
 describe('loss streak', () => {
-  const run = (games: ReturnType<typeof g>[]) => lossStreak({ ...base, games }, '2026-10-12').streak
+  const day = '2026-10-12'
+  const run = (games: ReturnType<typeof g>[], today = day) => lossStreak({ ...base, games }, today).streak
   it('counts trailing losses and resets on a win or draw', () => {
-    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'L'), g('2026-10-11', 'L')])).toBe(3)
-    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'W'), g('2026-10-11', 'L')])).toBe(1)
-    expect(run([g('2026-10-04', 'L'), g('2026-10-07', 'L'), g('2026-10-11', 'D')])).toBe(0)
+    expect(run([g(day, 'L', '18:00:00'), g(day, 'L', '18:20:00'), g(day, 'L', '18:40:00')])).toBe(3)
+    expect(run([g(day, 'L', '18:00:00'), g(day, 'W', '18:20:00'), g(day, 'L', '18:40:00')])).toBe(1)
+    expect(run([g(day, 'L', '18:00:00'), g(day, 'L', '18:20:00'), g(day, 'D', '18:40:00')])).toBe(0)
   })
   it('handles many games in one day, in the order they were logged', () => {
-    const day = [g('2026-10-11', 'W', '18:00:00'), g('2026-10-11', 'L', '18:20:00'), g('2026-10-11', 'L', '18:40:00'), g('2026-10-11', 'L', '19:00:00')]
-    expect(run(day)).toBe(3)
-    expect(run([...day, g('2026-10-11', 'W', '19:30:00')])).toBe(0)
-    expect(lossStreak({ ...base, games: day }, '2026-10-11').today).toEqual({ w: 1, d: 0, l: 3 })
+    const games = [g(day, 'W', '18:00:00'), g(day, 'L', '18:20:00'), g(day, 'L', '18:40:00'), g(day, 'L', '19:00:00')]
+    expect(run(games)).toBe(3)
+    expect(run([...games, g(day, 'W', '19:30:00')])).toBe(0)
+    expect(lossStreak({ ...base, games }, day).today).toEqual({ w: 1, d: 0, l: 3 })
+  })
+  it('starts every game day at 0: yesterday\'s last loss does not carry over', () => {
+    const sunday = [g('2026-10-11', 'W', '20:00:00'), g('2026-10-11', 'L', '21:00:00'), g('2026-10-11', 'L', '22:00:00')]
+    expect(run(sunday, '2026-10-11')).toBe(2)
+    expect(run(sunday, '2026-10-14')).toBe(0)
+    expect(lossStreak({ ...base, games: sunday }, '2026-10-14').season).toEqual({ w: 1, d: 0, l: 2 }) // still in the Coach's record
+    expect(run([...sunday, g('2026-10-14', 'L', '20:00:00')], '2026-10-14')).toBe(1)
   })
   it('only counts games since the current player took over, even within the same day', () => {
     const games = [g('2026-10-11', 'L', '18:00:00'), g('2026-10-11', 'L', '18:20:00'), g('2026-10-11', 'L', '18:40:00'), g('2026-10-11', 'L', '19:10:00')]

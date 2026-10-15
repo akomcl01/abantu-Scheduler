@@ -1,6 +1,6 @@
 # Abantu Scheduler
 
-Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls the whole team on Wednesdays and Sundays for a season, or until 3 losses in a row. **Read `docs/PRD.md` before changing behaviour** and don't re-ask settled decisions (see its Decisions log). Update the PRD in the same change as any behaviour change.
+Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls the whole team on Wednesdays and Sundays for a season, or until 3 losses in a row on one game day. **Read `docs/PRD.md` before changing behaviour** and don't re-ask settled decisions (see its Decisions log). Update the PRD in the same change as any behaviour change.
 
 ## Branches
 - `main`: earlier version (local mode + Supabase).
@@ -28,7 +28,7 @@ Mobile-first scheduler for our EA FC 27 Pro Clubs group. One **Coach** controls 
 ## House rules
 - Say **Coach**. Ceremony label is "Comunicado Oficial" (spelling as in `messages.ts`). Use neutral pronouns (they/their) in generated text.
 - Mobile first, floating pill nav at every size. Primary button is mint. Player cards are only a frame for the real FC card picture (upload or paste); no editable stats.
-- A game counts for whoever was Coach when played; league and playoff games both count toward the 3-loss rule.
+- A game counts for whoever was Coach when played; league and playoff games both count toward the 3-loss rule. The 3-loss count restarts at 0 each game day.
 
 ## Working rules (save tokens)
 - Verify with text reads or DOM queries; at most one screenshot per UI change.

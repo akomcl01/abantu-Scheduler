@@ -174,9 +174,11 @@ export const tally = (games: Game[]) => ({
 export function lossStreak(state: ScheduleState, today: string) {
   const st = stintOn(state, today)
   const mine = state.games.filter((g) => st && g.at >= st.at && g.date <= today).sort((a, b) => a.at.localeCompare(b.at))
+  // Each game day starts at 0: only today's games count towards the 3 in a row. Yesterday's last loss stays in the earlier record.
+  const day = mine.filter((g) => g.date === today)
   let streak = 0
-  for (let i = mine.length - 1; i >= 0 && mine[i].result === 'L'; i--) streak++
-  return { streak, recent: mine.slice(-8), today: tally(mine.filter((g) => g.date === today)), season: tally(mine) }
+  for (let i = day.length - 1; i >= 0 && day[i].result === 'L'; i--) streak++
+  return { streak, recent: mine.slice(-8), today: tally(day), season: tally(mine) }
 }
 
 /**

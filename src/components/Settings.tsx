@@ -41,7 +41,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
           </div>
         </Row>
         {onReplay && <Row title="Handover ceremony" desc="Watch the latest Coach change again: the thank-you and the contract."><Btn onClick={onReplay}>Replay</Btn></Row>}
-        <Row title="How it works" desc="One player has the team for a whole season, on Wednesdays and Sundays. If they lose 3 in a row, the next player takes over early." />
+        <Row title="How it works" desc="One player has the team for a whole season, on Wednesdays and Sundays. If they lose 3 in a row on a game day, the next player takes over early. Every game day starts back at 0." />
         <Row title="Share" desc={isShared ? 'Anyone with this link sees the live schedule.' : 'Saved on this device only for now. Publish the site to share it with the group.'}>
           <Btn onClick={() => { navigator.clipboard?.writeText(location.href); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>{copied ? 'Copied' : 'Copy link'}</Btn>
         </Row>
@@ -75,7 +75,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
       <section>
         <SectionTitle aside={<button onClick={guard(() => setAddingHandover(true))} className="flex min-h-9 items-center gap-1.5 text-xs font-semibold text-gold"><Icon d={ICONS.plus} size={14} />Add handover</button>}>Handovers</SectionTitle>
         <Card className="divide-y divide-hair overflow-hidden">
-          {handovers.length === 0 && <p className="p-5 text-sm text-mute">No early handovers yet. When a Coach loses 3 in a row, Home offers the handover. Use Add handover to record one that already happened, so Previous shows the right Coach.</p>}
+          {handovers.length === 0 && <p className="p-5 text-sm text-mute">No early handovers yet. When a Coach loses 3 in a row on a game day, Home offers the handover. Use Add handover to record one that already happened, so Previous shows the right Coach.</p>}
           {handovers.map((h) => (
             <div key={h.at} className="flex items-center gap-4 px-5 py-4">
               <div className="min-w-0 flex-1"><p className="truncate font-medium">{h.ignored ? 'Handover not counted' : `${h.from ? h.from.name : '?'} → ${h.to ? h.to.name : '?'}`}</p><p className={`text-sm ${h.ignored ? 'text-loss' : 'text-mute'}`}>{fmtShort(h.at.slice(0, 10))}{h.at.length > 10 ? ` · ${h.at.slice(11, 16)}` : ''}{h.ignored ? ' · before the first player starts, so it is ignored' : ''}</p></div>
