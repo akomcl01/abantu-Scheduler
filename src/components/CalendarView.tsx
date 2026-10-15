@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { addDays, coachesDuring, controllerFor, playoffsOn, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
+import { addDays, coachesDuring, controllerFor, dayGroups, playoffsOn, dow, fmtDate, nowStr, parseDate, seasonOn, tally, todayStr, compOf, type Comp, type GameEvent, type Result, type ScheduleState } from '../lib/rotation'
 import { Avatar, Btn, Icon, ICONS, ResultButtons, ResultChip, SectionTitle, Sheet, fmtDay, fmtLong, fmtMonth, fmtShort, fmtYear } from './ui'
 
 interface Props { state: ScheduleState; canEdit: boolean; onChange: (s: ScheduleState) => void; onNeedUnlock: () => void }
@@ -116,7 +116,8 @@ export default function CalendarView({ state, canEdit, onChange, onNeedUnlock }:
 function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Props & { date: string; onClose: () => void }) {
   const dayEvents = (state.events ?? []).filter((e) => e.date === date)
   const isMatch = dow(date) === 0 || dow(date) === 3
-  const c = isMatch ? controllerFor(state, date) : null
+  const groups = isMatch ? dayGroups(state, date) : []
+  const c = groups[0]?.coach ?? null // who played the day's games (or has the team, if none yet)
   const season = seasonOn(state, date)
   const played = date <= todayStr()
   const guard = (fn: () => void) => () => (canEdit ? fn() : onNeedUnlock())
@@ -137,14 +138,21 @@ function DaySheet({ date, state, canEdit, onChange, onNeedUnlock, onClose }: Pro
       {isMatch && (
         <>
           <div className="mb-5 flex items-center gap-3 rounded-2xl bg-sand p-3">
-            {c ? <><Avatar m={c} size={48} /><div><p className="text-xs text-mute">On the sticks{season ? ` · ${season.name}` : ''}</p><p className="text-lg font-semibold">{c.name}</p></div></> : <p className="px-1 text-mute">Before the rotation starts.</p>}
+            {c ? <><Avatar m={c} size={48} /><div><p className="text-xs text-mute">On the sticks{season ? ` · ${season.name}` : ''}</p><p className="text-lg font-semibold">{groups.map((gr) => gr.coach?.name).filter(Boolean).join(' → ')}</p></div></> : <p className="px-1 text-mute">Before the rotation starts.</p>}
           </div>
           {c && (played ? (
             <>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-mute">Games {dayGames.length > 0 && <span className="normal-case tracking-normal">· tap one to remove it</span>}</p>
               {dayGames.length === 0 ? <p className="mb-4 text-sm text-mute">Nothing logged.</p> : (
-                <div className="mb-4 flex flex-wrap gap-1.5">
-                  {dayGames.map((g) => <button key={g.id} aria-label={`Remove ${compOf(g)} ${g.result}`} onClick={guard(() => removeGame(g.id))} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={32} /></button>)}
+                <div className="mb-4 space-y-3">
+                  {groups.map((gr, i) => (
+                    <div key={gr.coach?.id ?? i}>
+                      {groups.length > 1 && <p className="mb-1.5 text-xs text-mute">{gr.coach?.name}</p>}
+                      <div className="flex flex-wrap gap-1.5">
+                        {gr.games.map((g) => <button key={g.id} aria-label={`Remove ${compOf(g)} ${g.result}`} onClick={guard(() => removeGame(g.id))} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={32} /></button>)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               <div className="mb-2 flex items-center justify-between">

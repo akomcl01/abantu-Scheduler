@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addDays, compOf, controllerFor, dow, playoffsOn, seasonOn, tally, todayStr, type ScheduleState } from '../lib/rotation'
+import { addDays, compOf, controllerFor, dayGroups, dow, playoffsOn, seasonOn, tally, todayStr, type ScheduleState } from '../lib/rotation'
 import { Avatar, Icon, ICONS, ResultChip, fmtDay, fmtLong, fmtShort } from './ui'
 
 const monday = (d: string) => addDays(d, -((dow(d) + 6) % 7))
@@ -19,9 +19,7 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
   }
 
   const isMatch = (d: string) => dow(d) === 0 || dow(d) === 3
-  const coach = isMatch(sel) ? controllerFor(state, sel) : null
-  const games = state.games.filter((g) => g.date === sel).sort((a, b) => a.at.localeCompare(b.at))
-  const t = tally(games)
+  const groups = isMatch(sel) ? dayGroups(state, sel) : []
   const dayEvents = events.filter((e) => e.date === sel)
   const season = seasonOn(state, sel)
 
@@ -66,25 +64,29 @@ export default function WeekStrip({ state }: { state: ScheduleState }) {
           <p className="font-medium">{sel === today ? 'Today · ' : ''}{fmtLong(sel)}</p>
           {season && <span className="shrink-0 text-xs text-mute">{season.name}</span>}
         </div>
-        {coach ? (
-          <div className="mt-3 flex items-center gap-3">
-            <Avatar m={coach} size={36} />
-            <div className="min-w-0 flex-1"><p className="truncate font-semibold">{coach.name}</p><p className="text-sm text-mute">Coach · {dow(sel) === 0 ? 'Sunday' : 'Wednesday'} game</p></div>
-          </div>
-        ) : <p className="mt-2 text-sm text-mute">{isMatch(sel) ? 'Before the rotation starts.' : 'No game day.'}</p>}
-
-        {games.length > 0 && (
-          <div className="mt-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {games.map((g) => <span key={g.id} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={26} /></span>)}
+        {groups.length === 0 || !groups[0].coach ? <p className="mt-2 text-sm text-mute">{isMatch(sel) ? 'Before the rotation starts.' : 'No game day.'}</p> : groups.map((gr, i) => {
+          const gt = tally(gr.games)
+          return (
+            <div key={gr.coach?.id ?? i} className="mt-3">
+              <div className="flex items-center gap-3">
+                <Avatar m={gr.coach!} size={36} />
+                <div className="min-w-0 flex-1"><p className="truncate font-semibold">{gr.coach!.name}</p><p className="text-sm text-mute">Coach · {dow(sel) === 0 ? 'Sunday' : 'Wednesday'} game</p></div>
+              </div>
+              {gr.games.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {gr.games.map((g) => <span key={g.id} className={compOf(g) === 'playoff' ? 'rounded-lg ring-1 ring-gold' : ''}><ResultChip r={g.result} size={26} /></span>)}
+                  </div>
+                  <p className="mt-2 text-sm text-mute"><b className="text-ink">{gt.w}W {gt.d}D {gt.l}L</b> {groups.length > 1 ? `for ${gr.coach!.name}` : 'that day'}</p>
+                </div>
+              )}
             </div>
-            <p className="mt-2 text-sm text-mute"><b className="text-ink">{t.w}W {t.d}D {t.l}L</b> that day</p>
-          </div>
-        )}
+          )
+        })}
         {dayEvents.map((e) => (
           <div key={e.id} className="mt-3 flex items-center gap-2 text-sm text-gold"><Icon d={ICONS.trophy} size={16} /><span className="font-semibold">{e.title}</span></div>
         ))}
-        {isMatch(sel) && coach && games.length === 0 && sel <= today && <p className="mt-3 text-sm text-mute">No games logged.</p>}
+        {isMatch(sel) && groups[0]?.coach && groups.every((gr) => gr.games.length === 0) && sel <= today && <p className="mt-3 text-sm text-mute">No games logged.</p>}
       </div>
     </section>
   )

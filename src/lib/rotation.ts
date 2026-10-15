@@ -256,3 +256,41 @@ export function ceremonyDue(h: { key: string; from: string }, today: string, see
   if (seen.includes(h.key)) return false
   return h.from === today || h.key !== openedWith
 }
+
+/** The Coach who had the team when this game was played (by its time, not just its day). */
+export function coachOfGame(state: ScheduleState, g: Game): Member | null {
+  let hit: Stint | undefined
+  for (const st of buildStints(state)) if (st.at <= g.at) hit = st
+  return hit ? state.members.find((m) => m.id === hit!.memberId) ?? null : null
+}
+
+/**
+ * A day's games grouped by the Coach who played them. Normally one group; two when a handover happened that day, so
+ * the losses that benched a Coach stay with them. A day with no games has one empty group for whoever has the team.
+ */
+export function dayGroups(state: ScheduleState, date: string): { coach: Member | null; games: Game[] }[] {
+  const games = state.games.filter((g) => g.date === date).sort((a, b) => a.at.localeCompare(b.at))
+  if (!games.length) return [{ coach: controllerFor(state, date), games: [] }]
+  const out: { coach: Member | null; games: Game[] }[] = []
+  for (const g of games) {
+    const coach = coachOfGame(state, g)
+    const last = out[out.length - 1]
+    if (last && last.coach?.id === coach?.id) last.games.push(g)
+    else out.push({ coach, games: [g] })
+  }
+  return out
+}
+
+/**
+ * The time Add handover starts with: a minute after the last game logged that day, so the games already played
+ * (including the losses that caused it) stay with the Coach who played them. Noon when nothing was played yet.
+ */
+export function handoverDefault(state: ScheduleState, date: string): string {
+  const last = state.games.filter((g) => g.date === date).map((g) => g.at).sort().pop()
+  if (!last) return `${date}T12:00`
+  const [y, mo, d] = last.slice(0, 10).split('-').map(Number)
+  const [h, mi] = last.slice(11, 16).split(':').map(Number)
+  const t = new Date(y, mo - 1, d, h, mi + 1)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}T${p(t.getHours())}:${p(t.getMinutes())}`
+}

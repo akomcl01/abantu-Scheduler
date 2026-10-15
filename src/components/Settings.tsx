@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { isShared } from '../lib/store'
-import { buildStints, coachesDuring, todayStr, type ScheduleState } from '../lib/rotation'
+import { buildStints, coachesDuring, handoverDefault, todayStr, type ScheduleState } from '../lib/rotation'
 import PlayerCodes from './PlayerCodes'
 import { Avatar, Btn, Card, Icon, ICONS, SectionTitle, Sheet, fmtShort } from './ui'
 
@@ -85,7 +85,7 @@ export default function Settings({ state, canEdit, onChange, onNeedUnlock, onLoc
         </Card>
       </section>
 
-      {addingHandover && <AddHandover onClose={() => setAddingHandover(false)} onSave={(at) => { if (!state.benches.includes(at)) onChange({ ...state, benches: [...state.benches, at] }); setAddingHandover(false) }} />}
+      {addingHandover && <AddHandover initial={handoverDefault(state, todayStr())} onClose={() => setAddingHandover(false)} onSave={(at) => { if (!state.benches.includes(at)) onChange({ ...state, benches: [...state.benches, at] }); setAddingHandover(false) }} />}
       {addingSeason && <AddSeason n={seasons.length + 1} last={seasons[seasons.length - 1]?.end} onClose={() => setAddingSeason(false)} onSave={(x) => { onChange({ ...state, seasons: [...state.seasons, x] }); setAddingSeason(false) }} />}
     </div>
   )
@@ -110,12 +110,12 @@ function AddSeason({ n, last, onSave, onClose }: { n: number; last?: string; onS
   )
 }
 
-function AddHandover({ onSave, onClose }: { onSave: (at: string) => void; onClose: () => void }) {
-  const [at, setAt] = useState(`${todayStr()}T12:00`)
+function AddHandover({ initial, onSave, onClose }: { initial: string; onSave: (at: string) => void; onClose: () => void }) {
+  const [at, setAt] = useState(initial)
   return (
     <Sheet title="Add handover" onClose={onClose}>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (at) onSave(`${at}:00`) }}>
-        <p className="text-sm text-mute">The next player in the squad order takes over at this moment. Games before it count for the Coach who had the team; games after it count for the next one.</p>
+        <p className="text-sm text-mute">The next player in the squad order takes over at this moment. Games before it count for the Coach who had the team; games after it count for the next one. It starts a minute after today’s last game, so the games already played (including the losses that caused it) stay with the Coach who played them.</p>
         <label className="block text-sm font-medium">When<input type="datetime-local" className="mt-2 min-h-12 w-full rounded-xl border border-hair bg-paper px-4" value={at} onChange={(e) => setAt(e.target.value)} /></label>
         <Btn type="submit" variant="primary" className="w-full" disabled={!at}>Add handover</Btn>
       </form>

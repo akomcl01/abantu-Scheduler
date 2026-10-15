@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, coachesDuring, matchesFrom, playoffsOn, nextMember, previousCoach, seasonOn, type ScheduleState, ceremonyDue } from './rotation'
+import { benchStamp, careerFor, coachGames, winRate, recordFor, buildStints, controllerFor, lossStreak, coachesDuring, matchesFrom, playoffsOn, nextMember, previousCoach, seasonOn, type ScheduleState, ceremonyDue, coachOfGame, dayGroups, handoverDefault } from './rotation'
 
 const mk = (id: string, active = true) => ({ id, name: id, color: '#fff', active })
 const base: ScheduleState = {
@@ -208,5 +208,35 @@ describe('handover ceremony: when it pops up', () => {
   it('shows only once per device', () => {
     expect(ceremonyDue(h, '2026-10-14', [h.key], h.key)).toBe(false)
     expect(ceremonyDue(h, '2026-10-14', [h.key], 'p1@2026-09-27')).toBe(false)
+  })
+})
+
+describe('the loss that completes a run stays with the Coach who played it', () => {
+  const mm = (id: string) => ({ id, name: id, color: '#fff', active: true })
+  const gg = (id: string, at: string, result: 'W' | 'D' | 'L') => ({ id, at, date: at.slice(0, 10), result })
+  const games = [gg('1', '2026-10-14T20:00:00', 'W'), gg('2', '2026-10-14T20:30:00', 'L'), gg('3', '2026-10-14T21:00:00', 'L'), gg('4', '2026-10-14T21:30:00', 'L')]
+  const state = (g: typeof games, benches: string[] = []): ScheduleState => ({ members: [mm('A'), mm('B'), mm('C')], startDate: '2026-10-11', seasons: [], benches, games: g, events: [], recordPics: {} })
+
+  it('the Add handover default lands after the last game that day, not at noon', () => {
+    expect(handoverDefault(state(games), '2026-10-14')).toBe('2026-10-14T21:31')
+    expect(handoverDefault(state(games), '2026-10-15')).toBe('2026-10-15T12:00')
+  })
+  it('rolls past midnight and the hour correctly', () => {
+    expect(handoverDefault(state([gg('1', '2026-10-14T23:59:30', 'L')]), '2026-10-14')).toBe('2026-10-15T00:00')
+    expect(handoverDefault(state([gg('1', '2026-10-14T20:59:00', 'L')]), '2026-10-14')).toBe('2026-10-14T21:00')
+  })
+  it('a handover added with that default keeps all four games with A', () => {
+    const s = state(games, [`${handoverDefault(state(games), '2026-10-14')}:00`])
+    expect(coachOfGame(s, games[3])?.id).toBe('A')
+    expect(dayGroups(s, '2026-10-14').map((x) => [x.coach?.id, x.games.length])).toEqual([['A', 4]])
+  })
+  it('a day split by a handover shows each Coach with the games they played', () => {
+    const more = [...games, gg('5', '2026-10-14T22:00:00', 'W')]
+    const s = state(more, ['2026-10-14T21:30:00.5'])
+    expect(dayGroups(s, '2026-10-14').map((x) => [x.coach?.id, x.games.map((g) => g.id)])).toEqual([['A', ['1', '2', '3', '4']], ['B', ['5']]])
+  })
+  it('a day with no games shows whoever has the team', () => {
+    const s = state(games, ['2026-10-14T21:30:00.5'])
+    expect(dayGroups(s, '2026-10-15').map((x) => [x.coach?.id, x.games.length])).toEqual([['B', 0]])
   })
 })

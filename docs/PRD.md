@@ -13,6 +13,8 @@ Our friend group (about 4 to 8 people), mostly on phones. One shared view. A few
 - A Coach keeps the team for a **whole season and through the playoffs**. At the next season start the next Coach in the squad order takes over. Playoffs have a start date and an optional last day; with no last day they run on until one is set (or the next season starts), and the Coach keeps the team.
 - A Coach is **benched after 3 losses in a row** and the next Coach takes over early. A win or a draw breaks the streak. League and playoff games both count. The streak only counts games since that Coach took over.
 - Order of play is the squad order, and it loops.
+- A game is credited by **when it was played**, not just the day. On a day with a handover, the day views (Home week strip, Calendar) split the games by Coach, so the loss that benches a Coach stays with them. **Add handover** (Settings) starts a minute after that day's last logged game (noon if none) so it never takes games the outgoing Coach already played.
+
 - Many games can be played in a day. Every game is logged with one tap (Win, Draw, Loss), tagged League or Playoffs.
 - A game counts for whoever was Coach when it was played.
 
