@@ -20,7 +20,7 @@ service cloud.firestore {
     // Goal of the week. Players don't use the PIN. Each player has a personal code (codes/, editor only). Entering it
     // on a phone creates a claim (claims/{player}) tying that player's name to the phone's anonymous sign-in. Clips,
     // votes and comments are only accepted when written by the phone that holds that player's claim, so switching
-    // names needs the other player's code. One clip and one vote per player per week come from the document id.
+    // names needs the other player's code. One vote per player per week comes from the document id; a player can post several clips a week (the cap is in the app).
     function claimedBy(playerId) {
       return request.auth != null
         && get(/databases/$(database)/documents/claims/$(playerId)).data.uid == request.auth.uid;
@@ -45,12 +45,13 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if request.resource.data.keys().hasOnly(['id', 'week', 'playerId', 'title', 'url', 'at'])
         && request.resource.data.id == id
-        && id == request.resource.data.week + '__' + request.resource.data.playerId
+        && id.matches(request.resource.data.week + '__' + request.resource.data.playerId + '(__[a-z0-9]+)?')
         && claimedBy(request.resource.data.playerId)
         && request.resource.data.title is string && request.resource.data.title.size() <= 80
         && request.resource.data.url is string
         && request.resource.data.url.matches('https://[a-z0-9]+\\.public\\.blob\\.vercel-storage\\.com/goals/.+');
       allow delete: if isEditor();
+      allow delete: if claimedBy(resource.data.playerId); // a player can remove their own post
     }
     match /votes/{id} {
       allow read: if true;
@@ -59,7 +60,7 @@ service cloud.firestore {
         && id == request.resource.data.week + '__' + request.resource.data.voterId
         && claimedBy(request.resource.data.voterId)
         && request.resource.data.clipId is string
-        && request.resource.data.clipId != id;
+        && !request.resource.data.clipId.matches(request.resource.data.week + '__' + request.resource.data.voterId + '(__[a-z0-9]+)?'); // never your own clip
       allow delete: if isEditor();
     }
     match /comments/{id} {

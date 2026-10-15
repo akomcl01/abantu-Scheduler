@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { GOALS_START, MAX_CLIP_MB, MAX_COMMENT, MAX_TITLE, announceDay, clipId, commentsFor, countdown, hasStarted, startOfDay, voteBlock, voteOf, weekStart, winnerOf, type Clip, type Comment } from '../lib/goals'
+import { GOALS_START, MAX_CLIPS_PER_WEEK, MAX_CLIP_MB, MAX_COMMENT, MAX_TITLE, announceDay, clipsOf, commentsFor, countdown, hasStarted, startOfDay, voteBlock, voteOf, weekStart, winnerOf, type Clip, type Comment } from '../lib/goals'
 import { isShared } from '../lib/store'
 import { useGoals, useMe } from '../lib/goalsStore'
 import { addDays, nowStr, todayStr, type Member, type ScheduleState } from '../lib/rotation'
@@ -12,7 +12,7 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
   const week = weekStart(today)
   const started = hasStarted(today)
   const [, tick] = useState(0) // bumped when a countdown hits zero, so the screen moves on by itself
-  const { clips, votes, comments, addClip, castVote, addComment, error } = useGoals()
+  const { clips, votes, comments, addClip, removeClip, castVote, addComment, error } = useGoals()
   const { me: meId, saved, verified, claim, authError } = useMe()
   const [pick, setPick] = useState(false)
   const [view, setView] = useState<'week' | 'vault'>('week')
@@ -38,7 +38,8 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
 
   const thisWeek = clips.filter((c) => c.week === week)
   const sharedClip = sharedId ? clips.find((c) => c.id === sharedId) ?? null : null
-  const mine = me ? thisWeek.find((c) => c.id === clipId(week, me.id)) : undefined
+  const mine = me ? clipsOf(clips, week, me.id) : []
+  const left = MAX_CLIPS_PER_WEEK - mine.length
   const myVote = me ? voteOf(votes, week, me.id) : undefined
   const lastWeek = addDays(week, -7)
   const lastWinner = lastWeek >= GOALS_START ? winnerOf(clips, votes, lastWeek) : null
@@ -119,8 +120,8 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
 
           {started && (
             <Card className="border-accent/40 bg-accent/10 p-4">
-              <p className="font-semibold">{mine ? 'Your goal is in.' : 'Goal of the week is open!'}</p>
-              <p className="mt-1 text-sm text-mute">{mine ? 'Now upvote your favourites and drop a comment. The winner is announced Sunday.' : 'Scored a belter this week? Record it, upload it and let the squad vote. The more goals, the better. Get yours in before Sunday.'}</p>
+              <p className="font-semibold">{mine.length ? (mine.length === 1 ? 'Your goal is in.' : `Your ${mine.length} goals are in.`) : 'Goal of the week is open!'}</p>
+              <p className="mt-1 text-sm text-mute">{mine.length ? 'Now upvote your favourites and drop a comment. Got another belter? You can post more. The winner is announced Sunday.' : 'Scored a belter this week? Record it, upload it and let the squad vote. The more goals, the better. Get yours in before Sunday.'}</p>
             </Card>
           )}
 
@@ -140,12 +141,14 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
 
           {started && (
             <Card className="space-y-3 p-4">
-              <p className="font-semibold">{mine ? 'Your clip is in. Replace it?' : 'Upload your goal'}</p>
+              <p className="font-semibold">{left <= 0 ? `All ${MAX_CLIPS_PER_WEEK} goals posted` : mine.length ? `Add another goal (${mine.length} of ${MAX_CLIPS_PER_WEEK} posted)` : 'Upload your goal'}</p>
               {!me ? (
                 <>
                   <p className="text-sm text-mute">{verified === 'checking' ? 'Checking this phone…' : isShared ? 'Enter your personal code first. It proves it is you, so only you can upload under your name.' : 'Pick your name first.'}</p>
                   <Btn variant="primary" className="w-full" onClick={() => setPick(true)}>{isShared && saved ? 'Verify it\'s you' : 'Who are you?'}</Btn>
                 </>
+              ) : left <= 0 ? (
+                <p className="text-sm text-mute">You have posted your {MAX_CLIPS_PER_WEEK} goals for this week. Remove one of yours below if you want to post a different one.</p>
               ) : (
                 <>
                   <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, MAX_TITLE))} placeholder="Title (optional), e.g. Volley from halfway" disabled={pct !== null} className="min-h-12 w-full rounded-xl border border-hair bg-paper px-4" />
@@ -158,11 +161,11 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
                       <Btn className="w-full" disabled={pct !== null} onClick={() => file.current?.click()}>Choose a different video</Btn>
                     </>
                   ) : (
-                    <Btn variant="primary" className="w-full" onClick={() => file.current?.click()}>{mine ? 'Choose a new video' : 'Choose a video'}</Btn>
+                    <Btn variant="primary" className="w-full" onClick={() => file.current?.click()}>{mine.length ? 'Choose another video' : 'Choose a video'}</Btn>
                   )}
                   {pct !== null && <div className="h-2 overflow-hidden rounded-full bg-hair" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} /></div>}
                   {msg && <p className="text-sm text-mute" role="status">{msg}</p>}
-                  <p className="text-xs text-mute">One clip per player each week, up to {MAX_CLIP_MB} MB.</p>
+                  <p className="text-xs text-mute">Up to {MAX_CLIPS_PER_WEEK} goals per player each week, up to {MAX_CLIP_MB} MB each.</p>
                 </>
               )}
             </Card>
@@ -174,7 +177,7 @@ export default function Goals({ state, sharedId, onClearShared }: { state: Sched
               {posts.length === 0 ? <Card className="p-4 text-mute">No clips yet. Be the first to upload.</Card> : (
                 <div className="space-y-5">
                   {posts.map((clip) => (
-                    <Post key={clip.id} clip={clip} author={who(clip.playerId)} who={who} me={me} picked={myVote?.clipId === clip.id} block={me ? voteBlock(clip, me.id, today) : null}
+                    <Post key={clip.id} clip={clip} author={who(clip.playerId)} who={who} me={me} onRemove={me && clip.playerId === me.id ? () => { if (window.confirm('Remove this goal? Its comments go with it.')) removeClip(clip.id) } : undefined} picked={myVote?.clipId === clip.id} block={me ? voteBlock(clip, me.id, today) : null}
                       comments={commentsFor(comments, clip.id)} onVote={() => vote(clip)} onComment={(t) => (me ? addComment(clip.id, me.id, t, nowStr()) : setPick(true))} onNeedName={() => setPick(true)} />
                   ))}
                 </div>
@@ -195,12 +198,12 @@ const Video = ({ url, className = '' }: { url: string; className?: string }) => 
 )
 
 interface PostProps {
-  clip: Clip; author: Member; who: (id: string) => Member; me: Member | null
+  clip: Clip; author: Member; who: (id: string) => Member; me: Member | null; onRemove?: () => void
   picked: boolean; block: string | null; comments: Comment[]; onVote: () => void; onComment: (text: string) => void; onNeedName: () => void
 }
 
 /** One clip, laid out like an Instagram post: player, video, upvote + comment buttons, caption, comments. */
-function Post({ clip, author, who, me, picked, block, comments, onVote, onComment, onNeedName }: PostProps) {
+function Post({ clip, author, who, me, onRemove, picked, block, comments, onVote, onComment, onNeedName }: PostProps) {
   const [all, setAll] = useState(false)
   const [text, setText] = useState('')
   const input = useRef<HTMLInputElement>(null)
@@ -214,6 +217,7 @@ function Post({ clip, author, who, me, picked, block, comments, onVote, onCommen
         <Avatar m={author} size={32} />
         <p className="min-w-0 flex-1 truncate font-semibold">{author.name}</p>
         <span className="shrink-0 text-xs text-mute">{fmtWeekday(clip.at.slice(0, 10))}</span>
+        {onRemove && <button onClick={onRemove} className="shrink-0 rounded-full px-2 text-xs font-semibold text-accent">Remove</button>}
       </header>
       <Video url={clip.url} className="rounded-none" />
       <div className="px-3 pb-3 pt-1">
@@ -307,7 +311,7 @@ function HowTo({ defaultOpen }: { defaultOpen: boolean }) {
     <>Download the <b className="text-ink">PlayStation App</b> on your phone and sign in with your PlayStation account.</>,
     <>In the app, open the <b className="text-ink">Captures</b> tab. Your saved video is there.</>,
     <>Download the video to your phone.</>,
-    <>Come back here, tap <b className="text-ink">Choose a video</b> and pick it. Add a title if you like. Up to {MAX_CLIP_MB} MB, one clip a week.</>,
+    <>Come back here, tap <b className="text-ink">Choose a video</b> and pick it. Add a title if you like. Up to {MAX_CLIP_MB} MB each. You can post up to {MAX_CLIPS_PER_WEEK} goals a week.</>,
   ]
   return (
     <details open={defaultOpen} className="group rounded-2xl border border-hair bg-card">

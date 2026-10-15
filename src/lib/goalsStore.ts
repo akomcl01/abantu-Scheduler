@@ -1,10 +1,10 @@
 import { uploadPresigned } from '@vercel/blob/client'
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth'
-import { collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { normalizeCode } from './codes'
 import { fbPlayers } from './firebase'
-import { clipId, voteId, type Clip, type Comment, type Vote } from './goals'
+import { newClipId, voteId, type Clip, type Comment, type Vote } from './goals'
 
 const LS = 'abantu-goals-v1'
 const ME = 'abantu-me'
@@ -72,18 +72,34 @@ export function useGoals() {
         multipart: true,
         onUploadProgress: (p) => onProgress(Math.round(p.percentage)),
       })
-      await save('clips', { id: clipId(week, playerId), week, playerId, title: title.trim(), url: blob.url, at })
+      await save('clips', { id: newClipId(week, playerId), week, playerId, title: title.trim(), url: blob.url, at })
       return null
     } catch (e) {
       return `Upload failed: ${(e as Error).message}. Uploads only work on the deployed app.`
     }
   }, [save])
 
+  /** Remove one of your own posts. */
+  const removeClip = useCallback(async (id: string) => {
+    try {
+      if (fbPlayers) await deleteDoc(doc(fbPlayers.db, 'clips', id))
+      else {
+        const cur = read()
+        const next = { ...cur, clips: cur.clips.filter((c) => c.id !== id) }
+        localStorage.setItem(LS, JSON.stringify(next))
+        setData(next)
+      }
+      setError(null)
+    } catch (e) {
+      setError((e as { code?: string }).code === 'permission-denied' ? 'Could not remove it. Only the player who posted it can.' : (e as Error).message)
+    }
+  }, [])
+
   const castVote = useCallback((week: string, voterId: string, clip: string) => save('votes', { id: voteId(week, voterId), week, voterId, clipId: clip }), [save])
 
   const addComment = useCallback((clip: string, authorId: string, text: string, at: string) => save('comments', { id: crypto.randomUUID(), clipId: clip, authorId, text: text.trim(), at }), [save])
 
-  return { clips: data?.clips ?? null, votes: data?.votes ?? [], comments: data?.comments ?? [], addClip, castVote, addComment, error }
+  return { clips: data?.clips ?? null, votes: data?.votes ?? [], comments: data?.comments ?? [], addClip, removeClip, castVote, addComment, error }
 }
 
 export type Verified = 'checking' | 'yes' | 'no'

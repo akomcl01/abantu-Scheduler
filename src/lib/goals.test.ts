@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GOALS_START, announceDay, clipId, commentsFor, countdown, goalFromSearch, hasStarted, isClosed, nextDrop, pastWinners, rank, shareTitle, shareUrl, startOfDay, voteBlock, voteId, weekStart, winnerOf, type Clip, type Comment, type Vote } from './goals'
+import { GOALS_START, announceDay, clipId, clipsOf, commentsFor, countdown, goalFromSearch, hasStarted, MAX_CLIPS_PER_WEEK, isClosed, newClipId, nextDrop, pastWinners, rank, shareTitle, shareUrl, startOfDay, voteBlock, voteId, weekStart, winnerOf, type Clip, type Comment, type Vote } from './goals'
 
 const W = '2026-10-11' // the kickoff Sunday
 const clip = (playerId: string, at: string, week = W): Clip => ({ id: clipId(week, playerId), week, playerId, title: '', url: 'https://x/v.mp4', at })
@@ -118,5 +118,35 @@ describe('goal of the week: sharing', () => {
     expect(goalFromSearch('')).toBeNull()
     expect(goalFromSearch('?goal=')).toBeNull()
     expect(goalFromSearch('?x=1')).toBeNull()
+  })
+})
+
+describe('goal of the week: several goals from one player', () => {
+  const mk = (playerId: string, n: string, at: string): Clip => ({ id: newClipId(W, playerId, () => n), week: W, playerId, title: n, url: 'https://x/v.mp4', at })
+  it('gives each new post its own id, still tied to the player and week', () => {
+    expect(newClipId(W, 'abc', () => 'k3j9')).toBe('2026-10-11__abc__k3j9')
+    expect(newClipId(W, 'abc')).not.toBe(newClipId(W, 'abc'))
+    expect(newClipId(W, 'abc')).toMatch(/^2026-10-11__abc__[a-z0-9]+$/)
+  })
+  it('lists one player\'s posts for a week, nobody else\'s', () => {
+    const all = [mk('a', 'one', '2026-10-12T10:00:00'), mk('a', 'two', '2026-10-12T11:00:00'), mk('b', 'three', '2026-10-12T12:00:00'), { ...mk('a', 'old', '2026-10-05T10:00:00'), week: '2026-10-04' }]
+    expect(clipsOf(all, W, 'a').map((c) => c.title)).toEqual(['one', 'two'])
+    expect(MAX_CLIPS_PER_WEEK).toBeGreaterThan(1)
+  })
+  it('each post is ranked on its own votes; your own posts never get your votes', () => {
+    const a1 = mk('a', 'one', '2026-10-12T10:00:00'), a2 = mk('a', 'two', '2026-10-12T11:00:00'), b1 = mk('b', 'three', '2026-10-12T12:00:00')
+    const votes: Vote[] = [
+      { id: voteId(W, 'b'), week: W, voterId: 'b', clipId: a2.id }, // b votes for a's second post
+      { id: voteId(W, 'a'), week: W, voterId: 'a', clipId: a1.id }, // a votes for their own: ignored
+    ]
+    expect(rank([a1, a2, b1], votes, W).map((r) => [r.clip.title, r.votes])).toEqual([['two', 1], ['one', 0], ['three', 0]])
+    expect(voteBlock(a1, 'a', '2026-10-14')).toBe('Your own clip')
+    expect(voteBlock(a2, 'a', '2026-10-14')).toBe('Your own clip')
+    expect(voteBlock(a2, 'b', '2026-10-14')).toBeNull()
+  })
+  it('a player with two good goals can still win with only one of them', () => {
+    const a1 = mk('a', 'one', '2026-10-12T10:00:00'), a2 = mk('a', 'two', '2026-10-12T11:00:00')
+    const votes: Vote[] = [{ id: voteId(W, 'b'), week: W, voterId: 'b', clipId: a1.id }, { id: voteId(W, 'c'), week: W, voterId: 'c', clipId: a1.id }, { id: voteId(W, 'd'), week: W, voterId: 'd', clipId: a2.id }]
+    expect(winnerOf([a1, a2], votes, W)?.clip.title).toBe('one')
   })
 })

@@ -6,7 +6,7 @@ import { addDays, dow, parseDate } from './rotation'
  * Pure helpers, unit tested.
  */
 export interface Clip {
-  id: string // clipId(week, playerId): one clip per player per week
+  id: string // newClipId(week, playerId): a player can post several clips a week (older single-clip ids are clipId(week, playerId))
   week: string // the Sunday the week opens, YYYY-MM-DD
   playerId: string
   title: string
@@ -32,11 +32,17 @@ export interface Comment {
 /** The Sunday goal of the week officially kicks off. Before it, the Goals tab shows a countdown. */
 export const GOALS_START = '2026-10-11'
 
+/** Goals one player can post in a week. Raise it here (the upload route and rules don't count). */
+export const MAX_CLIPS_PER_WEEK = 3
 export const MAX_CLIP_MB = 100
 export const MAX_TITLE = 80
 export const MAX_COMMENT = 280
 
 export const clipId = (week: string, playerId: string) => `${week}__${playerId}`
+/** A fresh id for one more clip by the same player in the same week. */
+export const newClipId = (week: string, playerId: string, rand: () => string = () => Math.random().toString(36).slice(2, 10)) => `${week}__${playerId}__${rand()}`
+/** One player's clips in a week. */
+export const clipsOf = (clips: Clip[], week: string, playerId: string) => clips.filter((c) => c.week === week && c.playerId === playerId)
 export const voteId = clipId
 
 export const hasStarted = (today: string) => today >= GOALS_START
